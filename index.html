@@ -1,0 +1,331 @@
+<html>
+	<head>
+		<script src="js/lib/jquery.js"></script>
+		<script src="js/lib/jquery.translate.js"></script>
+		<script src="js/lib/three.js"></script>
+		<script src="js/lib/three.css3d.js"></script>
+		<script src="js/lib/tween.js"></script>
+		<script src="js/lib/three.collada.js"></script>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			var Utils = {
+				toScreenCoordinates	: function ( position, camera, jqdiv ) {
+					var pos = position.clone();
+					projScreenMat = new THREE.Matrix4();
+					projScreenMat.multiply( camera.projectionMatrix, camera.matrixWorldInverse );
+					projScreenMat.multiplyVector3( pos );
+
+					return { 	
+						x: ( pos.x + 1 ) * jqdiv.width() / 2,
+						y: ( - pos.y + 1) * jqdiv.height() / 2 
+					};
+				},
+				toSceneCoordinates	: function( e ) {
+					var projector = new THREE.Projector();
+					
+					var vector = new THREE.Vector3( (e.clientX / window.innerWidth) * 2 - 1,  -(e.clientY / window.innerHeight) * 2 + 1, 0.5 );
+					projector.unprojectVector( vector, Camera);
+					
+					var ray = new THREE.Raycaster( Camera.position, vector.subSelf( Camera.position ).normalize() );
+					console.log(ray.intersectObjects($.map(Objects, function(val, key) { return val; })));
+				},
+				recursivelyEnableShadowForCollada	: function( childrenArray ) {
+					if( childrenArray.length > 0 ) {
+						for( var i in childrenArray ) {
+							if( childrenArray[i] instanceof THREE.Mesh ) {
+								childrenArray[i].castShadow = true;
+							}
+							else {
+								Utils.recursivelyEnableShadowForCollada(childrenArray[i].children);
+							}
+						}
+					}
+				}
+			};
+			
+			var Camera, Scene, Scene2, Renderer, CSSRenderer, El, CSSEl;
+			
+			var Objects = {
+				worldPlane	: null,
+				gameBoard	: null
+			};
+			
+			var Textures = {
+			};
+			
+			var Materials = {
+				bluePhong	: new THREE.MeshPhongMaterial({
+					color: 0xFFFFFF
+				}),
+				redPhong	: new THREE.MeshPhongMaterial({
+					color: 0xFFFFFF
+				}),
+				woodLambert	: new THREE.MeshPhongMaterial({
+					color: 0xFFFFFF
+				})
+			};
+			
+			var Models = {
+				shoes	: null
+			};
+			
+			var Light = {
+				mainLight	: null
+			};
+			
+			var Tweens = {
+				gameStart	: null
+			};
+			
+			var Game = {
+				init: function() {
+					Scene = new THREE.Scene();
+					
+					Camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000000 );
+					Camera.position.x = 2000;
+					Camera.position.y = 2000;
+					Camera.position.z = 2000;
+					
+					Materials.woodLambert = new THREE.MeshPhongMaterial({
+						map: Textures.wood 
+					});
+					
+					Materials.board = new THREE.MeshPhongMaterial({
+						map: Textures.board 
+					});
+					
+					Materials.paper = new THREE.MeshPhongMaterial({
+						map: Textures.paper 
+					});
+					
+					Objects.worldPlane = new THREE.Mesh( 
+						new THREE.PlaneGeometry(100000, 100000, 1, 1),
+						Materials.bluePhong
+					);
+				
+					Objects.worldPlane.receiveShadow = true;
+					Objects.worldPlane.castShadow = true;
+					
+					Objects.table = new THREE.Mesh(
+						new THREE.CubeGeometry( 2000, 2000, 200 ), 
+						Materials.woodLambert
+					);
+					
+					Objects.table.position.z = 100;
+					
+					Objects.table.castShadow = true;
+					Objects.table.receiveShadow = true;
+					
+					Objects.gameBoard = new THREE.Mesh(
+						new THREE.CubeGeometry( 1000, 1000, 10 ), 
+						Materials.board
+					);
+					
+					Objects.gameBoard.position.x = -300;
+					Objects.gameBoard.position.z = 205;
+					
+					Objects.gameBoard.castShadow = true;
+					Objects.gameBoard.receiveShadow = true;
+					
+					Objects.clipBoard = Models.clipBoard;
+					Objects.clipBoard.position.x = 350;
+					Objects.clipBoard.position.y = -250;
+					Objects.clipBoard.position.z = 200;
+					
+					Objects.clipBoard.rotation.x = Math.PI/2;
+					
+					Objects.invisiPlane = new THREE.Mesh(
+						new THREE.PlaneGeometry(  427, 543, 1, 1 ),
+						Materials.redPhong
+					);
+					
+					Objects.invisiPlane.position.x = 585;
+					Objects.invisiPlane.position.y = 140;
+					Objects.invisiPlane.position.z = 209;
+					
+					Light.mainLight = new THREE.SpotLight(0xFFFFFF, 0.6);
+
+					Light.mainLight.position.z = 3000;
+					
+					Light.mainLight.castShadow = true;
+					Light.mainLight.shadowDarkness = 0.5;
+					//Light.mainLight.shadowCameraVisible = true;
+					
+					Light.helperLight = new THREE.SpotLight(0xFFFFFF, 0.5);
+					
+					Light.helperLight.position.x = 1000;
+					Light.helperLight.position.y = 1000;
+					Light.helperLight.position.z = 1000;
+					
+					Light.helperLight.castShadow = true;
+					Light.helperLight.shadowDarkness = 0.5;
+					//Light.helperLight.shadowCameraVisible = true;
+					
+					Camera.lookAt( Objects.table.position );
+					
+					Scene.add( Objects.worldPlane );
+					Scene.add( Objects.table );
+					Scene.add( Objects.gameBoard );
+					Scene.add( Objects.clipBoard );
+					Scene.add( Objects.invisiPlane );
+					Scene.add( Light.mainLight );
+					Scene.add( Light.helperLight );
+					
+					Renderer = new THREE.WebGLRenderer({ antialias: true, precision: "highp" });
+					Renderer.setSize( window.innerWidth, window.innerHeight );
+					Renderer.shadowMapEnabled = true;
+					Renderer.shadowMapSoft = true;
+					Renderer.shadowMapType = THREE.PCFShadowMap;
+					
+					Renderer.shadowCameraFov = 50;
+					Renderer.shadowMapWidth = 512;
+					Renderer.shadowMapHeight = 512;
+					
+					El = $( Renderer.domElement );
+					$( document.body ).append( El );
+					
+					Tweens.firstSequence = new TWEEN.Tween( Camera.position )
+						.to({ x: 500, y: 500, z: 500 }, 3000)
+						.easing( TWEEN.Easing.Cubic.InOut )
+						.onUpdate(function(){							
+							Camera.lookAt( Objects.table.position );
+						});
+					
+					//Tweens.firstSequence.chain(Tweens.secondSequence);
+				},
+				animate	: function() {
+					requestAnimationFrame( Game.animate );				
+					
+					Renderer.render( Scene, Camera );
+					
+					TWEEN.update();
+				}
+			};
+			
+			var onDocumentMouseDown = function(e) {
+				//e.preventDefault();
+				var p3d = Utils.toSceneCoordinates( e );
+				//var p2d = Utils.toScreenCoordinates( p3d, Camera, El );
+				//console.log( p3d );
+				//console.log( p2d );
+			};
+			
+			var epsilon = function ( value ) {
+
+				return Math.abs( value ) < 0.000001 ? 0 : value;
+
+			};
+
+			
+			var getCameraCSSMatrix = function ( matrix ) {
+
+				var elements = matrix.elements;
+
+				return 'matrix3d(' +
+					epsilon( elements[ 0 ] ) + ',' +
+					epsilon( - elements[ 1 ] ) + ',' +
+					epsilon( elements[ 2 ] ) + ',' +
+					epsilon( elements[ 3 ] ) + ',' +
+					epsilon( elements[ 4 ] ) + ',' +
+					epsilon( - elements[ 5 ] ) + ',' +
+					epsilon( elements[ 6 ] ) + ',' +
+					epsilon( elements[ 7 ] ) + ',' +
+					epsilon( elements[ 8 ] ) + ',' +
+					epsilon( - elements[ 9 ] ) + ',' +
+					epsilon( elements[ 10 ] ) + ',' +
+					epsilon( elements[ 11 ] ) + ',' +
+					epsilon( elements[ 12 ] ) + ',' +
+					epsilon( - elements[ 13 ] ) + ',' +
+					epsilon( elements[ 14 ] ) + ',' +
+					epsilon( elements[ 15 ] ) +
+				')';
+			};
+			
+			$(function() {
+				var loadQueue = 0;
+				var loaded = 0;
+				var loadCallback = function() {
+					loaded++;
+					if(loadQueue === loaded) {
+						Game.init();
+						Game.animate();
+						//Tweens.firstSequence.start();
+						
+						console.log(Objects.invisiPlane.matrix.elements);
+						console.log(getCameraCSSMatrix(Camera.matrixWorldInverse));
+						
+						document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+					}
+				};
+				
+				loadQueue++;
+				Textures.wood = THREE.ImageUtils.loadTexture("tex/teak.jpg", {}, function() { loadCallback(); });
+				Textures.wood.wrapS = THREE.RepeatWrapping;
+				Textures.wood.wrapT = THREE.RepeatWrapping;
+				Textures.wood.repeat.set(10, 10);
+				Textures.wood.needsUpdate = true;
+				
+				loadQueue++;
+				Textures.board = THREE.ImageUtils.loadTexture("tex/board.png", {}, function() { loadCallback(); });
+				Textures.board.wrapS = THREE.RepeatWrapping;
+				Textures.board.wrapT = THREE.RepeatWrapping;
+				Textures.board.repeat.set(1, 1);
+				Textures.board.needsUpdate = true;
+				
+				loadQueue++;
+				var loader = new THREE.ColladaLoader();
+				loader.options.convertUpAxis = true;
+				loader.load("clipboard.dae", function ( collada ) {
+					dae = collada.scene;
+					dae.scale.x = dae.scale.y = dae.scale.z = 50.0;
+					Utils.recursivelyEnableShadowForCollada(dae.children);
+					
+					Models.clipBoard = dae;
+					loadCallback();
+				});
+			});
+		</script>
+		<style>
+			#domEl {
+				-webkit-transform-style: preserve-3d; 
+				-webkit-perspective-origin-x: 50%;
+				-webkit-perspective-origin-y: 50%; 
+				width: 1280px; 
+				height: 675px; 
+				position: absolute; 
+				top: 0px; 
+				-webkit-perspective: 600px;
+			}
+			
+			#camera {
+				-webkit-transform-style: preserve-3d; 
+				width: 1280px; 
+				height: 675px; 
+				-webkit-transform: translate3d(0px, 0px, 0px) matrix3d(0.6887494921684265,0.4255509376525879,0.5869672894477844,0,0,-0.8096106648445129,0.5869672298431396,0,-0.7249994874000549,0.4042733907699585,0.5576188564300537,0,72.49996948242188,-40.42735290527344,-3463.10693359375,1) translate3d(640px, 337.5px, 0px);
+			}
+			
+			#mappingDiv {
+				width: 800px; 
+				height: 800px; 
+				border: 0px; 
+				background: #f00;
+				position: absolute; 
+				-webkit-transform-style: preserve-3d;
+			}
+		</style>
+		<div id="domEl">
+			<div id="camera">
+				<div id="mappingDiv">
+					<h1>Tests</h1>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
