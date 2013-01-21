@@ -229,110 +229,130 @@
 					Renderer.render( Scene, Camera );
 				
 					TWEEN.update();
-					mapDiv();
+					divMapping._update();
 				}
 			};
 			
 			var onDocumentMouseDown = function(e) {
-				//e.preventDefault();
+				e.preventDefault();
 				var p3d = Utils.toSceneCoordinates( e );
-				//var p2d = Utils.toScreenCoordinates( p3d, Camera, El );
-				//console.log( p3d );
-				//console.log( p2d );
+				console.log( p3d );
 			};
 			
-			var epsilon = function ( value ) {
-
-				return Math.abs( value ) < 0.000001 ? 0 : value;
-
-			};
-
-			var getCameraCSSMatrix = function ( matrix ) {
-
-				var elements = matrix.elements;
-
-				return 'matrix3d(' +
-					epsilon( elements[ 0 ] ) + ',' +
-					epsilon( - elements[ 1 ] ) + ',' +
-					epsilon( elements[ 2 ] ) + ',' +
-					epsilon( elements[ 3 ] ) + ',' +
-					epsilon( elements[ 4 ] ) + ',' +
-					epsilon( - elements[ 5 ] ) + ',' +
-					epsilon( elements[ 6 ] ) + ',' +
-					epsilon( elements[ 7 ] ) + ',' +
-					epsilon( elements[ 8 ] ) + ',' +
-					epsilon( - elements[ 9 ] ) + ',' +
-					epsilon( elements[ 10 ] ) + ',' +
-					epsilon( elements[ 11 ] ) + ',' +
-					epsilon( elements[ 12 ] ) + ',' +
-					epsilon( - elements[ 13 ] ) + ',' +
-					epsilon( elements[ 14 ] ) + ',' +
-					epsilon( elements[ 15 ] ) +
-				')';
-			};
-			
-			var getObjectCSSMatrix = function ( matrix ) {
-
-				var elements = matrix.elements;
-
-				var fx = Objects.invisiPlane.geometry.width / obj.outerWidth();
-				var fy = Objects.invisiPlane.geometry.height / obj.outerHeight();
+			var divMapping = {
+				_camera		: null,
+				_fov		: 0,
+				_wrapperDiv	: null,
+				_cameraDiv	: null,
+				_glObjs		: [],
+				_divs		: [],
 				
-				return 'translate3d(-50%,-50%,0) matrix3d(' +
-					epsilon( elements[ 0 ] ) + ',' +
-					epsilon( elements[ 1 ] ) + ',' +
-					epsilon( elements[ 2 ] ) + ',' +
-					epsilon( elements[ 3 ] ) + ',' +
-					epsilon( - elements[ 4 ] ) + ',' +
-					epsilon( - elements[ 5 ] ) + ',' +
-					epsilon( - elements[ 6 ] ) + ',' +
-					epsilon( - elements[ 7 ] ) + ',' +
-					epsilon( elements[ 8 ] ) + ',' +
-					epsilon( elements[ 9 ] ) + ',' +
-					epsilon( elements[ 10 ] ) + ',' +
-					epsilon( elements[ 11 ] ) + ',' +
-					epsilon( elements[ 12 ] ) + ',' +
-					epsilon( elements[ 13 ] ) + ',' +
-					epsilon( elements[ 14 ] ) + ',' +
-					epsilon( elements[ 15 ] ) +
-				')' + 
-				' scale3d(' +
-					epsilon( fx ) + ',' +
-					epsilon( fy ) + ',' +
-					'1' +
-				')';
-
-			};
-			
-			var wrapper, camera, obj;
-			
-			var mapDiv = function() {
-				var fov = 0.5 / Math.tan(Camera.fov * Math.PI / 360) * window.innerHeight;
+				setup: function( camera, wrapper ) {
+					divMapping._camera = camera;
+					divMapping._wrapperDiv = wrapper;
+					divMapping._cameraDiv = wrapper.find( ".camera" );
+					
+					divMapping._fov = 0.5 / Math.tan(divMapping._camera.fov * Math.PI / 360) * wrapper.height();
+					
+					divMapping._setWrapperStyle();
+					divMapping._setCameraStyle();
+				},
 				
-				wrapper = $("#wrapper");
-				camera = $("#camera");
-				obj = $("#object");
+				map: function( glObj, divObj ) {
+					divMapping._glObjs.push( glObj );
+					divMapping._divs.push( divObj );
+					divMapping._update();
+				},
 				
-				wrapper.css({
-					"-webkit-perspective"	: fov + "px",
-					width					: window.innerWidth,
-					height					: window.innerHeight,
-					position				: "absolute"
-				});
+				_update: function() {
+					divMapping._setWrapperStyle();
+					divMapping._setCameraStyle();
+					for( var i in divMapping._divs ) {
+						var d = divMapping._divs[ i ];
+						var g = divMapping._glObjs [ i ];						
+						divMapping._setObjectStyle( d, g );
+					}
+				},
 				
-				Scene.updateMatrixWorld();
+				_setWrapperStyle: function() {
+					divMapping._wrapperDiv.css({
+						"-webkit-perspective"	: divMapping._fov + "px",
+						"width"					: divMapping._wrapperDiv.width() + "px",
+						"height"				: divMapping._wrapperDiv.height() + "px",
+						"position"				: "absolute"
+					});
+				},
 				
-				var cameraStyle = "translate3d(0,0," + fov + "px)" + getCameraCSSMatrix( Camera.matrixWorldInverse ) + " translate3d(" + window.innerWidth/2 + "px," + window.innerHeight/2 + "px, 0)";
-				camera.css({
-					"-webkit-transform"		: cameraStyle,
-					width					: window.innerWidth,
-					height					: window.innerHeight
-				});				
+				_setCameraStyle: function() {
+					divMapping._cameraDiv.css({
+						"-webkit-transform"		: "translate3d(0,0," + divMapping._fov + "px)" + 
+												  divMapping._getCameraCSSMatrix( divMapping._camera ) + " " +
+												  "translate3d(" + ( divMapping._wrapperDiv.width() / 2 ) + "px," + ( divMapping._wrapperDiv.height() / 2 ) + "px, 0)",
+						"width"					: divMapping._wrapperDiv.width(),
+						"height"				: divMapping._wrapperDiv.height()
+					});		
+				},
 				
-				Objects.invisiPlane.updateMatrix();
+				_setObjectStyle: function( div, obj ) {
+					div.css({
+						"-webkit-transform"		: divMapping._getObjectCSSMatrix( div, obj )
+					});
+				},
 				
-				var objectStyle = getObjectCSSMatrix( Objects.invisiPlane.matrixWorld );
-				obj.css("-webkit-transform", objectStyle);
+				_epsilon: function ( value ) {
+					return Math.abs( value ) < 0.000001 ? 0 : value;
+				},
+				
+				_getCameraCSSMatrix: function ( camera ) {
+					var elements = camera.matrixWorldInverse.elements;
+					return 'matrix3d(' +
+						divMapping._epsilon( elements[ 0 ] ) + ',' +
+						divMapping._epsilon( - elements[ 1 ] ) + ',' +
+						divMapping._epsilon( elements[ 2 ] ) + ',' +
+						divMapping._epsilon( elements[ 3 ] ) + ',' +
+						divMapping._epsilon( elements[ 4 ] ) + ',' +
+						divMapping._epsilon( - elements[ 5 ] ) + ',' +
+						divMapping._epsilon( elements[ 6 ] ) + ',' +
+						divMapping._epsilon( elements[ 7 ] ) + ',' +
+						divMapping._epsilon( elements[ 8 ] ) + ',' +
+						divMapping._epsilon( - elements[ 9 ] ) + ',' +
+						divMapping._epsilon( elements[ 10 ] ) + ',' +
+						divMapping._epsilon( elements[ 11 ] ) + ',' +
+						divMapping._epsilon( elements[ 12 ] ) + ',' +
+						divMapping._epsilon( - elements[ 13 ] ) + ',' +
+						divMapping._epsilon( elements[ 14 ] ) + ',' +
+						divMapping._epsilon( elements[ 15 ] ) +
+					')';
+				},
+				
+				_getObjectCSSMatrix: function ( div, obj ) {
+					var elements = obj.matrixWorld.elements;
+					var fx = obj.geometry.width / div.outerWidth();
+					var fy = obj.geometry.height / div.outerHeight();
+					return 'translate3d(-50%,-50%,0) matrix3d(' +
+						divMapping._epsilon( elements[ 0 ] ) + ',' +
+						divMapping._epsilon( elements[ 1 ] ) + ',' +
+						divMapping._epsilon( elements[ 2 ] ) + ',' +
+						divMapping._epsilon( elements[ 3 ] ) + ',' +
+						divMapping._epsilon( - elements[ 4 ] ) + ',' +
+						divMapping._epsilon( - elements[ 5 ] ) + ',' +
+						divMapping._epsilon( - elements[ 6 ] ) + ',' +
+						divMapping._epsilon( - elements[ 7 ] ) + ',' +
+						divMapping._epsilon( elements[ 8 ] ) + ',' +
+						divMapping._epsilon( elements[ 9 ] ) + ',' +
+						divMapping._epsilon( elements[ 10 ] ) + ',' +
+						divMapping._epsilon( elements[ 11 ] ) + ',' +
+						divMapping._epsilon( elements[ 12 ] ) + ',' +
+						divMapping._epsilon( elements[ 13 ] ) + ',' +
+						divMapping._epsilon( elements[ 14 ] ) + ',' +
+						divMapping._epsilon( elements[ 15 ] ) +
+					')' + 
+					' scale3d(' +
+						divMapping._epsilon( fx ) + ',' +
+						divMapping._epsilon( fy ) + ',' +
+						'1' +
+					')';
+				}
 			};
 			
 			$(function() {
@@ -342,12 +362,20 @@
 					loaded++;
 					if(loadQueue === loaded) {
 						Game.init();
+						
+						
+						var cssWorld = $("#wrapper");
+						cssWorld.css({
+							width	: $(window).width(),
+							height	: $(window).height()
+						});
+						
+						divMapping.setup( Camera, cssWorld );
+						divMapping.map( Objects.invisiPlane, cssWorld.find(".object") );
+						
 						Game.animate();
 						Tweens.firstSequence.start();
 						Tweens.secondSequence.start();
-						
-						mapDiv();
-						wrapper.css("display", "block");
 						
 						document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 					}
@@ -384,15 +412,14 @@
 			#wrapper {
 				-webkit-transform-style: preserve-3d; 
 				-webkit-perspective-origin: 50% 50%;
-				display: none;
 			}
 			
-			#camera {
+			.camera {
 				-webkit-transform-style: preserve-3d;
 				-webkit-transform-origin: 50% 50%;
 			}
 			
-			#object {
+			.object {
 				width: 427px; 
 				height: 543px;
 				padding: 40px;
@@ -559,8 +586,8 @@
 			}
 		</style>
 		<div id="wrapper">
-			<div id="camera">
-				<div id="object">
+			<div class="camera">
+				<div class="object">
 					<div class="header">
 						<div class="colorBar"></div>
 						<div class="headerText">
