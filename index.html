@@ -6,7 +6,7 @@
 		<script src="js/lib/three.css3d.js"></script>
 		<script src="js/lib/tween.js"></script>
 		<script src="js/lib/three.collada.js"></script>
-		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600' rel='stylesheet' type='text/css' />
+		<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600' rel='stylesheet' type='text/css' />
 		<style>
 			* {
 				margin: 0;
@@ -39,7 +39,9 @@
 					projector.unprojectVector( vector, Camera);
 					
 					var ray = new THREE.Raycaster( Camera.position, vector.subSelf( Camera.position ).normalize() );
-					console.log(ray.intersectObjects($.map(Objects, function(val, key) { return val; })));
+					var intersects = ray.intersectObjects($.map(Objects, function(val, key) { return val; }));
+					
+					return intersects;
 				},
 				recursivelyEnableShadowForCollada	: function( childrenArray ) {
 					if( childrenArray.length > 0 ) {
@@ -162,7 +164,7 @@
 						Materials.whitePhong
 					);
 					
-					Objects.dice.position.z = 205;
+					Objects.dice.position.z = 230;
 					Objects.dice.position.x = -100;
 					
 					Light.mainLight = new THREE.SpotLight(0xFFFFFF, 0.6);
@@ -208,14 +210,14 @@
 					$( document.body ).append( El );
 					
 					Tweens.firstSequence = new TWEEN.Tween( Camera.position )
-						.to({ x: 0, y: 0, z: 1500 }, 3000)
+						.to({ x: 585, y: -350, z: 1000 }, 3000)
 						.easing( TWEEN.Easing.Cubic.InOut )
 						.onUpdate(function(){							
 							//Camera.lookAt( Objects.table.position );
 						});
 					
 					Tweens.secondSequence = new TWEEN.Tween( Camera.rotation )
-						.to({ z: 0 }, 3000)
+						.to({ z: 0, x: Math.PI/6 }, 3000)
 						.easing( TWEEN.Easing.Cubic.InOut )
 						.onUpdate(function(){							
 							//Camera.lookAt( Objects.table.position );
@@ -239,121 +241,249 @@
 				console.log( p3d );
 			};
 			
-			var divMapping = {
-				_camera		: null,
-				_fov		: 0,
-				_wrapperDiv	: null,
-				_cameraDiv	: null,
-				_glObjs		: [],
-				_divs		: [],
-				
-				setup: function( camera, wrapper ) {
-					divMapping._camera = camera;
-					divMapping._wrapperDiv = wrapper;
-					divMapping._cameraDiv = wrapper.find( ".camera" );
+			var divMapping = (function() {
+				return {
+					_camera		: null,
+					_fov		: 0,
+					_wrapperDiv	: null,
+					_cameraDiv	: null,
+					_glObjs		: [],
+					_divs		: [],
 					
-					divMapping._fov = 0.5 / Math.tan(divMapping._camera.fov * Math.PI / 360) * wrapper.height();
+					setup: function( camera, wrapper ) {
+						this._camera = camera;
+						this._wrapperDiv = wrapper;
+						this._cameraDiv = wrapper.find( ".camera" );
+						
+						this._fov = 0.5 / Math.tan(this._camera.fov * Math.PI / 360) * wrapper.height();
+						
+						this._setWrapperStyle();
+						this._setCameraStyle();
+					},
 					
-					divMapping._setWrapperStyle();
-					divMapping._setCameraStyle();
-				},
-				
-				map: function( glObj, divObj ) {
-					divMapping._glObjs.push( glObj );
-					divMapping._divs.push( divObj );
-					divMapping._update();
-				},
-				
-				_update: function() {
-					divMapping._setWrapperStyle();
-					divMapping._setCameraStyle();
-					for( var i in divMapping._divs ) {
-						var d = divMapping._divs[ i ];
-						var g = divMapping._glObjs [ i ];						
-						divMapping._setObjectStyle( d, g );
+					map: function( glObj, divObj ) {
+						this._glObjs.push( glObj );
+						this._divs.push( divObj );
+						this._update();
+					},
+					
+					_update: function() {
+						this._setWrapperStyle();
+						this._setCameraStyle();
+						for( var i in this._divs ) {
+							var d = this._divs[ i ];
+							var g = this._glObjs [ i ];						
+							this._setObjectStyle( d, g );
+						}
+					},
+					
+					_setWrapperStyle: function() {
+						this._wrapperDiv.css({
+							"-webkit-perspective"	: this._fov + "px",
+							"width"					: this._wrapperDiv.width() + "px",
+							"height"				: this._wrapperDiv.height() + "px",
+							"position"				: "absolute"
+						});
+					},
+					
+					_setCameraStyle: function() {
+						this._cameraDiv.css({
+							"-webkit-transform"		: "translate3d(0,0," + this._fov + "px)" + 
+													  this._getCameraCSSMatrix( this._camera ) + " " +
+													  "translate3d(" + ( this._wrapperDiv.width() / 2 ) + "px," + ( this._wrapperDiv.height() / 2 ) + "px, 0)",
+							"width"					: this._wrapperDiv.width(),
+							"height"				: this._wrapperDiv.height()
+						});		
+					},
+					
+					_setObjectStyle: function( div, obj ) {
+						div.css({
+							"-webkit-transform"		: this._getObjectCSSMatrix( div, obj )
+						});
+					},
+					
+					_epsilon: function ( value ) {
+						return Math.abs( value ) < 0.000001 ? 0 : value;
+					},
+					
+					_getCameraCSSMatrix: function ( camera ) {
+						var elements = camera.matrixWorldInverse.elements;
+						return 'matrix3d(' +
+							this._epsilon( elements[ 0 ] ) + ',' +
+							this._epsilon( - elements[ 1 ] ) + ',' +
+							this._epsilon( elements[ 2 ] ) + ',' +
+							this._epsilon( elements[ 3 ] ) + ',' +
+							this._epsilon( elements[ 4 ] ) + ',' +
+							this._epsilon( - elements[ 5 ] ) + ',' +
+							this._epsilon( elements[ 6 ] ) + ',' +
+							this._epsilon( elements[ 7 ] ) + ',' +
+							this._epsilon( elements[ 8 ] ) + ',' +
+							this._epsilon( - elements[ 9 ] ) + ',' +
+							this._epsilon( elements[ 10 ] ) + ',' +
+							this._epsilon( elements[ 11 ] ) + ',' +
+							this._epsilon( elements[ 12 ] ) + ',' +
+							this._epsilon( - elements[ 13 ] ) + ',' +
+							this._epsilon( elements[ 14 ] ) + ',' +
+							this._epsilon( elements[ 15 ] ) +
+						')';
+					},
+					
+					_getObjectCSSMatrix: function ( div, obj ) {
+						var elements = obj.matrixWorld.elements;
+						var fx = obj.geometry.width / div.outerWidth();
+						var fy = obj.geometry.height / div.outerHeight();
+						return 'translate3d(-50%,-50%,0) matrix3d(' +
+							this._epsilon( elements[ 0 ] ) + ',' +
+							this._epsilon( elements[ 1 ] ) + ',' +
+							this._epsilon( elements[ 2 ] ) + ',' +
+							this._epsilon( elements[ 3 ] ) + ',' +
+							this._epsilon( - elements[ 4 ] ) + ',' +
+							this._epsilon( - elements[ 5 ] ) + ',' +
+							this._epsilon( - elements[ 6 ] ) + ',' +
+							this._epsilon( - elements[ 7 ] ) + ',' +
+							this._epsilon( elements[ 8 ] ) + ',' +
+							this._epsilon( elements[ 9 ] ) + ',' +
+							this._epsilon( elements[ 10 ] ) + ',' +
+							this._epsilon( elements[ 11 ] ) + ',' +
+							this._epsilon( elements[ 12 ] ) + ',' +
+							this._epsilon( elements[ 13 ] ) + ',' +
+							this._epsilon( elements[ 14 ] ) + ',' +
+							this._epsilon( elements[ 15 ] ) +
+						')' + 
+						' scale3d(' +
+							this._epsilon( fx ) + ',' +
+							this._epsilon( fy ) + ',' +
+							'1' +
+						')';
 					}
-				},
-				
-				_setWrapperStyle: function() {
-					divMapping._wrapperDiv.css({
-						"-webkit-perspective"	: divMapping._fov + "px",
-						"width"					: divMapping._wrapperDiv.width() + "px",
-						"height"				: divMapping._wrapperDiv.height() + "px",
-						"position"				: "absolute"
-					});
-				},
-				
-				_setCameraStyle: function() {
-					divMapping._cameraDiv.css({
-						"-webkit-transform"		: "translate3d(0,0," + divMapping._fov + "px)" + 
-												  divMapping._getCameraCSSMatrix( divMapping._camera ) + " " +
-												  "translate3d(" + ( divMapping._wrapperDiv.width() / 2 ) + "px," + ( divMapping._wrapperDiv.height() / 2 ) + "px, 0)",
-						"width"					: divMapping._wrapperDiv.width(),
-						"height"				: divMapping._wrapperDiv.height()
-					});		
-				},
-				
-				_setObjectStyle: function( div, obj ) {
-					div.css({
-						"-webkit-transform"		: divMapping._getObjectCSSMatrix( div, obj )
-					});
-				},
-				
-				_epsilon: function ( value ) {
-					return Math.abs( value ) < 0.000001 ? 0 : value;
-				},
-				
-				_getCameraCSSMatrix: function ( camera ) {
-					var elements = camera.matrixWorldInverse.elements;
-					return 'matrix3d(' +
-						divMapping._epsilon( elements[ 0 ] ) + ',' +
-						divMapping._epsilon( - elements[ 1 ] ) + ',' +
-						divMapping._epsilon( elements[ 2 ] ) + ',' +
-						divMapping._epsilon( elements[ 3 ] ) + ',' +
-						divMapping._epsilon( elements[ 4 ] ) + ',' +
-						divMapping._epsilon( - elements[ 5 ] ) + ',' +
-						divMapping._epsilon( elements[ 6 ] ) + ',' +
-						divMapping._epsilon( elements[ 7 ] ) + ',' +
-						divMapping._epsilon( elements[ 8 ] ) + ',' +
-						divMapping._epsilon( - elements[ 9 ] ) + ',' +
-						divMapping._epsilon( elements[ 10 ] ) + ',' +
-						divMapping._epsilon( elements[ 11 ] ) + ',' +
-						divMapping._epsilon( elements[ 12 ] ) + ',' +
-						divMapping._epsilon( - elements[ 13 ] ) + ',' +
-						divMapping._epsilon( elements[ 14 ] ) + ',' +
-						divMapping._epsilon( elements[ 15 ] ) +
-					')';
-				},
-				
-				_getObjectCSSMatrix: function ( div, obj ) {
-					var elements = obj.matrixWorld.elements;
-					var fx = obj.geometry.width / div.outerWidth();
-					var fy = obj.geometry.height / div.outerHeight();
-					return 'translate3d(-50%,-50%,0) matrix3d(' +
-						divMapping._epsilon( elements[ 0 ] ) + ',' +
-						divMapping._epsilon( elements[ 1 ] ) + ',' +
-						divMapping._epsilon( elements[ 2 ] ) + ',' +
-						divMapping._epsilon( elements[ 3 ] ) + ',' +
-						divMapping._epsilon( - elements[ 4 ] ) + ',' +
-						divMapping._epsilon( - elements[ 5 ] ) + ',' +
-						divMapping._epsilon( - elements[ 6 ] ) + ',' +
-						divMapping._epsilon( - elements[ 7 ] ) + ',' +
-						divMapping._epsilon( elements[ 8 ] ) + ',' +
-						divMapping._epsilon( elements[ 9 ] ) + ',' +
-						divMapping._epsilon( elements[ 10 ] ) + ',' +
-						divMapping._epsilon( elements[ 11 ] ) + ',' +
-						divMapping._epsilon( elements[ 12 ] ) + ',' +
-						divMapping._epsilon( elements[ 13 ] ) + ',' +
-						divMapping._epsilon( elements[ 14 ] ) + ',' +
-						divMapping._epsilon( elements[ 15 ] ) +
-					')' + 
-					' scale3d(' +
-						divMapping._epsilon( fx ) + ',' +
-						divMapping._epsilon( fy ) + ',' +
-						'1' +
-					')';
-				}
-			};
+				};
+			})();
+			
+			var healthJournal = (function() {
+				return {
+					_journal			: function() { return $(".healthJournal"); 				},
+					_nameTxt			: function() { return this._journal().find(".name");	},
+					_picture			: function() { return this._journal().find(".picture");	},
+					_genderTxt			: function() { return this._journal().find(".gender");	},
+					_ageTxt				: function() { return this._journal().find(".age");		},
+					_balanceTxt			: function() { return this._journal().find(".balance");	},
+					_physicalPrg		: function() { return this._journal().find(".physical");},
+					_mentalPrg			: function() { return this._journal().find(".mental");	},
+					_diseasesBx			: function() { return this._journal().find(".diseases");},
+					
+					_diseases			: {},
+					_dJq				: $("<div class=\"d\"><p class=\"key\">ALS</p><p class=\"val\"><div class=\"progressBar\"><div class=\"perc\">30%</div><div class=\"bar\"></div></div></p></div>"),
+					
+					name: function( ) {
+						var self = this;
+						return {
+							get: function() {
+								return self._nameTxt().text();
+							},
+							set: function( name ) {
+								self._nameTxt().text( name );
+							}
+						};
+					},
+					
+					picture: function( ) {
+						var self = this;
+						return {
+							set: function( url ) {
+								self._picture().attr( "src", url );
+							}
+						};
+					},
+					
+					gender: function( ) {
+						var self = this;
+						return {
+							get: function() {
+								return self._genderTxt().text();
+							},
+							set: function( gender ) {
+								self._genderTxt().text( gender );
+							}
+						};
+					},
+					
+					age: function( ) {
+						var self = this;
+						return {
+							get: function() {
+								return parseInt( self._ageTxt().text() );
+							},
+							set: function( age ) {
+								self._ageTxt().text( age );
+							}
+						};
+					},
+					
+					balance: function( ) {
+						var self = this;
+						return {
+							get: function() {
+								return parseInt( self._balanceTxt().text() );
+							},
+							set: function( balance ) {
+								self._balanceTxt().text( balance );
+							}
+						};
+					},
+					
+					physicalHealth: function( ) {
+						var self = this;
+						return {
+							get: function() {
+								return parseInt( self._physicalPrg().find( ".perc" ).text().replace( "%", "" ) );
+							},
+							set: function( h ) {
+								self._physicalPrg().find( ".bar" ).css( "width", h + "%" );
+								self._physicalPrg().find( ".perc" ).text( h + "%" );
+								self._updatePicture( h, self.mentalHealth().get() );
+							}
+						};
+					},
+					
+					mentalHealth: function( ) {
+						var self = this;
+						return {
+							get: function() {
+								return parseInt( self._mentalPrg().find( ".perc" ).text().replace( "%", "" ) );
+							},
+							set: function( h ) {
+								self._mentalPrg().find( ".bar" ).css( "width", h + "%" );
+								self._mentalPrg().find( ".perc" ).text( h + "%" );
+								self._updatePicture( self.physicalHealth().get(), h );
+							}
+						};
+					},
+					
+					_updatePicture: function( p, m ) {
+						var state = ( p * m ) > 250 ? "good" : "bad";
+						var gender = this.gender().get() === "mann" ? "male" : "female";
+						this.picture().set( "img/" + gender + "_" + state + ".jpg" );
+					},
+					
+					risks: function() {
+						var self = this;
+						return {
+							get: function( d ) {
+								return parseInt( self._diseases[ d ].find( ".perc" ).text().replace( "%", "" ) )
+							},
+							set: function( d, p ) {
+								if( !self._diseases[ d ] ) {
+									self._diseases[ d ] = self._dJq.clone();
+									self._diseases[ d ].find( ".key" ).text( d );
+									self._diseasesBx().append( self._diseases[ d ] );
+								}
+								self._diseases[ d ].find( ".bar" ).css( "width", p + "%" );
+								self._diseases[ d ].find( ".perc" ).text( p + "%" );
+							}
+						};
+					}
+				};
+			})();
 			
 			$(function() {
 				var loadQueue = 0;
@@ -371,7 +501,16 @@
 						});
 						
 						divMapping.setup( Camera, cssWorld );
-						divMapping.map( Objects.invisiPlane, cssWorld.find(".object") );
+						divMapping.map( Objects.invisiPlane, cssWorld.find(".healthJournal") );
+						
+						healthJournal.name().set("Ola Normann");
+						healthJournal.gender().set("kvinne");
+						healthJournal.age().set("42");
+						healthJournal.balance().set("480 000");
+						healthJournal.physicalHealth().set( 80 );
+						healthJournal.mentalHealth().set( 0 );
+						healthJournal.risks().set( "ALS", 50 );
+						healthJournal.risks().set( "Kreft", 30 );
 						
 						Game.animate();
 						Tweens.firstSequence.start();
@@ -420,7 +559,7 @@
 			}
 			
 			.object {
-				width: 427px; 
+				width: 430px; 
 				height: 543px;
 				padding: 40px;
 				position: absolute; 
@@ -522,7 +661,7 @@
 			}
 			
 			.progressBar {
-				width: 250px;
+				width: 427px;
 				height: 15px;
 				border: 1px solid #333;
 				float: left;
@@ -536,7 +675,7 @@
 			}
 			
 			.progressBar .perc {
-				width: 250px;
+				width: 427px;
 				text-align: center;
 				position: absolute;
 				font-family: Open Sans;
@@ -587,24 +726,28 @@
 		</style>
 		<div id="wrapper">
 			<div class="camera">
-				<div class="object">
+				<div class="object healthJournal">
 					<div class="header">
 						<div class="colorBar"></div>
 						<div class="headerText">
 							<h1>helsejournal</h1>
-							<h2>THOMAS ANDRESEN</h2>
+							<h2 class="name">THOMAS ANDRESEN</h2>
 						</div>
 					</div>
 					<div class="bio">
 						<img class="picture" src="meth.png" />
 						<div class="bioInfo">
 							<div class="line">
+								<p class="key">KJØNN</p>
+								<p class="val gender">mann</p>
+							</div>
+							<div class="line">
 								<p class="key">ALDER</p>
-								<p class="val">25</p>
+								<p class="val age">25</p>
 							</div>
 							<div class="line">
 								<p class="key">FORMUE</p>
-								<p class="val">0</p>
+								<p class="val balance">0</p>
 							</div>
 						</div>
 					</div>
@@ -612,7 +755,7 @@
 						<div class="line">
 							<p class="key">FYSISK HELSE</p>
 							<p class="val">
-								<div class="progressBar">
+								<div class="progressBar physical">
 									<div class="perc">10%</div>
 									<div class="bar"></div>
 								</div>
@@ -621,7 +764,7 @@
 						<div class="line">
 							<p class="key">MENTAL HELSE</p>
 							<p class="val">
-								<div class="progressBar">
+								<div class="progressBar mental">
 									<div class="perc">10%</div>
 									<div class="bar"></div>
 								</div>
@@ -629,44 +772,8 @@
 						</div>
 					</div>
 					<div class="risks">
-						<p class="key">KARTLAGTE RISIKI</p>
+						<p class="key">KARTLAGTE RISIKOER</p>
 						<div class="diseases">
-							<div class="d">
-								<p class="key">KREFT</p>
-								<p class="val">
-								<div class="progressBar">
-									<div class="perc">30%</div>
-									<div class="bar"></div>
-								</div>
-								</p>
-							</div>
-							<div class="d">
-								<p class="key">H&K</p>
-								<p class="val">
-								<div class="progressBar">
-									<div class="perc">30%</div>
-									<div class="bar"></div>
-								</div>
-								</p>
-							</div>
-							<div class="d">
-								<p class="key">MS</p>
-								<p class="val">
-								<div class="progressBar">
-									<div class="perc">30%</div>
-									<div class="bar"></div>
-								</div>
-								</p>
-							</div>
-							<div class="d">
-								<p class="key">ALS</p>
-								<p class="val">
-								<div class="progressBar">
-									<div class="perc">30%</div>
-									<div class="bar"></div>
-								</div>
-								</p>
-							</div>
 						</p>
 					</div>
 				</div>
