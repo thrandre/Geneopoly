@@ -21,16 +21,16 @@
 	<body>
 		<script>
 			var Utils = {
-				toScreenCoordinates	: function ( position, camera, jqdiv ) {
-					var pos = position.clone();
-					projScreenMat = new THREE.Matrix4();
-					projScreenMat.multiply( camera.projectionMatrix, camera.matrixWorldInverse );
-					projScreenMat.multiplyVector3( pos );
-
-					return { 	
-						x: ( pos.x + 1 ) * jqdiv.width() / 2,
-						y: ( - pos.y + 1 ) * jqdiv.height() / 2 
-					};
+				toScreenCoordinates	: function ( position ) {
+					var widthHalf = $(window).width() / 2;
+					var heightHalf = $(window).height() / 2;
+					var projector = new THREE.Projector();
+					var vector = projector.projectVector( position, Camera );
+					
+					vector.x = ( vector.x * widthHalf ) + widthHalf;
+					vector.y = - ( vector.y * heightHalf ) + heightHalf;
+					
+					return vector;
 				},
 				toSceneCoordinates	: function( e ) {
 					var projector = new THREE.Projector();
@@ -57,7 +57,7 @@
 				}
 			};
 			
-			var Camera, Scene, Scene2, Renderer, CSSRenderer, El, CSSEl;
+			var Camera, Scene, Renderer, El, CssOverlay, PlayerDetails;
 			
 			var Objects = {
 				worldPlane	: null,
@@ -87,17 +87,17 @@
 				mainLight	: null
 			};
 			
-			var Tweens = {
-				gameStart	: null
-			};
+			var Tweens = {};
+			
+			var CameraMovements = {};
 			
 			var Game = {
 				init: function() {
 					Scene = new THREE.Scene();
 					
 					Camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 1000000 );
-					Camera.position.x = -300;
-					Camera.position.y = 0;
+					Camera.position.x = -250;
+					Camera.position.y = -50;
 					Camera.position.z = 800;
 					
 					Camera.rotation.z = Math.PI / 4;
@@ -165,9 +165,9 @@
 					);
 					
 					Objects.dice.position.z = 230;
-					Objects.dice.position.x = -100;
+					Objects.dice.position.x = -75;
 					
-					Light.mainLight = new THREE.SpotLight(0xFFFFFF, 0.6);
+					Light.mainLight = new THREE.SpotLight(0xFFFFFF, 0.5);
 
 					Light.mainLight.position.z = 3000;
 					
@@ -183,7 +183,16 @@
 					
 					Light.helperLight.castShadow = true;
 					Light.helperLight.shadowDarkness = 0.5;
-					//Light.helperLight.shadowCameraVisible = true;
+					
+					Light.helperLight2 = new THREE.SpotLight(0xFFFFFF, 0.5);
+					
+					Light.helperLight2.position.x = -1000;
+					Light.helperLight2.position.y = -1000;
+					Light.helperLight2.position.z = 1000;
+					
+					Light.helperLight2.castShadow = true;
+					Light.helperLight2.shadowDarkness = 0.5;
+					//Light.helperLight2.shadowCameraVisible = true;
 					
 					//Camera.lookAt( Objects.gameBoard.position );
 					
@@ -195,6 +204,7 @@
 					Scene.add( Objects.dice );
 					Scene.add( Light.mainLight );
 					Scene.add( Light.helperLight );
+					Scene.add( Light.helperLight2 );
 					
 					Renderer = new THREE.WebGLRenderer({ antialias: true, precision: "highp" });
 					Renderer.setSize( window.innerWidth, window.innerHeight );
@@ -209,39 +219,111 @@
 					El = $( Renderer.domElement );
 					$( document.body ).append( El );
 					
-					Tweens.firstSequence = new TWEEN.Tween( Camera.position )
-						.to({ x: 585, y: -350, z: 1000 }, 3000)
-						.easing( TWEEN.Easing.Cubic.InOut )
-						.onUpdate(function(){							
-							//Camera.lookAt( Objects.table.position );
-						});
+					Game.registerCameraMovements();
+				},
+				registerCameraMovements: function() {
+					CameraMovements.reset = function( cb ) {
+						var p = new Parallel( cb );
+						var p0 = p.promise();
+						var p1 = p.promise();
+						Tweens.t0 = new TWEEN.Tween( Camera.position )
+							.to({ x: -250, y: -50, z: 800 }, 500)
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.onComplete( p0 )
+							.start();
+						Tweens.r0 = new TWEEN.Tween( Camera.rotation )
+							.to({ x:0, y: 0, z: Math.PI / 4 }, 500)
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.onComplete( p1 )
+							.start();
+					};
 					
-					Tweens.secondSequence = new TWEEN.Tween( Camera.rotation )
-						.to({ z: 0, x: Math.PI/6 }, 3000)
-						.easing( TWEEN.Easing.Cubic.InOut )
-						.onUpdate(function(){							
-							//Camera.lookAt( Objects.table.position );
+					CameraMovements.showJournal = function( cb ) {
+						var p = new Parallel( cb );
+						var p0 = p.promise();
+						var p1 = p.promise();
+						Tweens.t1 = new TWEEN.Tween( Camera.position )
+							.to({ x: 585, y: -350, z: 1000 }, 3000)
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.onComplete( p0 )
+							.start();
+						Tweens.r1 = new TWEEN.Tween( Camera.rotation )
+							.to({ z: 0, x: Math.PI/6 }, 3000)
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.onComplete( p1 )
+							.start();
+					};
+				},
+				showPlayerDetails: function() {
+					var screen = Utils.toScreenCoordinates( new THREE.Vector3( -270, -30, 210 ) );
+					PlayerDetails.fadeIn( 1000 );
+					PlayerDetails.css({
+						left	: screen.x - (PlayerDetails.outerWidth( true ) / 2),
+						top		: screen.y
+					});
+					PlayerDetails.find( ".name" ).focus();
+					PlayerDetails.find("input[type=button]").click(function() {
+						var sex = $(this).attr("class");
+						var name = PlayerDetails.find(".name").val();
+						if( name === "") {
+							alert( "Vennligst tast inn et navn." );
+							return;
+						}
+						Game.setInitialJournalValues( name, sex );
+						PlayerDetails.fadeOut(500, function() {
+							CameraMovements.showJournal();
 						});
+					});
+				},
+				setInitialJournalValues: function( name, gender ) {
+					HealthJournal.name().set( name.toUpperCase() );
+					HealthJournal.gender().set( gender );
+					HealthJournal.age().set( 0 );
+					HealthJournal.balance().set( 20000 );
+					HealthJournal.physicalHealth().set( 100 );
+					HealthJournal.mentalHealth().set( 100 );
+				},
+				start: function() {					
+					DivMapping.setup( Camera, CssOverlay );
+					DivMapping.map( Objects.invisiPlane, CssOverlay.find( ".HealthJournal" ) );
 					
-					//Tweens.firstSequence.chain(Tweens.secondSequence);
+					CssOverlay.css( "opacity", 1 );
+					CameraMovements.reset();
+					
+					Game.animate();
+					
+					Game.showPlayerDetails();
 				},
 				animate	: function() {
-					requestAnimationFrame( Game.animate );				
-					
+					requestAnimationFrame( Game.animate );
 					Renderer.render( Scene, Camera );
-				
 					TWEEN.update();
-					divMapping._update();
+					DivMapping._update();
 				}
 			};
 			
 			var onDocumentMouseDown = function(e) {
-				e.preventDefault();
 				var p3d = Utils.toSceneCoordinates( e );
 				console.log( p3d );
 			};
 			
-			var divMapping = (function() {
+			var Parallel = function( cb ) {
+				var _promiseCount = 0;
+				var _resolved = 0;
+				return {
+					promise: function() {
+						_promiseCount++;
+						return function() {
+							_resolved++;
+							if( _promiseCount === _resolved ) {
+								if( cb ) cb();
+							}
+						};
+					}
+				};
+			};
+			
+			var DivMapping = (function() {
 				return {
 					_camera		: null,
 					_fov		: 0,
@@ -359,14 +441,15 @@
 				};
 			})();
 			
-			var healthJournal = (function() {
+			var HealthJournal = (function() {
 				return {
-					_journal			: function() { return $(".healthJournal"); 				},
+					_journal			: function() { return $(".HealthJournal"); 				},
 					_nameTxt			: function() { return this._journal().find(".name");	},
 					_picture			: function() { return this._journal().find(".picture");	},
 					_genderTxt			: function() { return this._journal().find(".gender");	},
 					_ageTxt				: function() { return this._journal().find(".age");		},
 					_balanceTxt			: function() { return this._journal().find(".balance");	},
+					_salaryTxt			: function() { return this._journal().find(".salary");	},
 					_physicalPrg		: function() { return this._journal().find(".physical");},
 					_mentalPrg			: function() { return this._journal().find(".mental");	},
 					_diseasesBx			: function() { return this._journal().find(".diseases");},
@@ -399,10 +482,10 @@
 						var self = this;
 						return {
 							get: function() {
-								return self._genderTxt().text();
+								return self._genderTxt().text() === "mann" ? "male" : "female";
 							},
 							set: function( gender ) {
-								self._genderTxt().text( gender );
+								self._genderTxt().text( (gender === "male" ? "mann" : "kvinne") );
 							}
 						};
 					},
@@ -427,6 +510,18 @@
 							},
 							set: function( balance ) {
 								self._balanceTxt().text( balance );
+							}
+						};
+					},
+					
+					salary: function( ) {
+						var self = this;
+						return {
+							get: function() {
+								return parseInt( self._salaryTxt().text() );
+							},
+							set: function( salary ) {
+								self._salaryTxt().text( salaray );
 							}
 						};
 					},
@@ -461,8 +556,13 @@
 					
 					_updatePicture: function( p, m ) {
 						var state = ( p * m ) > 250 ? "good" : "bad";
-						var gender = this.gender().get() === "mann" ? "male" : "female";
-						this.picture().set( "img/" + gender + "_" + state + ".jpg" );
+						var gender = this.gender().get();
+						if( this.name().get().toLowerCase().indexOf("chuck") != -1 ) {
+							this.picture().set( "img/chuck.jpg" );
+						}
+						else {
+							this.picture().set( "img/" + gender + "_" + state + ".jpg" );
+						}
 					},
 					
 					risks: function() {
@@ -485,56 +585,62 @@
 				};
 			})();
 			
+			var states = {
+				start: {
+					translation	: { x: 0, y: 0, z: 0 },
+					rotation	: { x: 0, y: 0, z: 0 }
+				}
+			};
+			
+			var CameraController = function( camera, states ) {
+				
+			};
+			
 			$(function() {
-				var loadQueue = 0;
-				var loaded = 0;
-				var loadCallback = function() {
-					loaded++;
-					if(loadQueue === loaded) {
-						Game.init();
-						
-						
-						var cssWorld = $("#wrapper");
-						cssWorld.css({
+				var p = new Parallel(function() {
+					Game.init();
+					Game.start();
+					$(window).resize(function() {
+						Renderer.setSize( $(window).width(), $(window).height() );
+						Camera.aspect = $(window).width() / $(window).height();
+						Camera.updateProjectionMatrix();
+						DivMapping.setup( Camera, CssOverlay );
+						if( PlayerDetails.is(":visible") ) {
+							Game.showPlayerDetails();
+						}
+						CssOverlay.css({
 							width	: $(window).width(),
 							height	: $(window).height()
 						});
-						
-						divMapping.setup( Camera, cssWorld );
-						divMapping.map( Objects.invisiPlane, cssWorld.find(".healthJournal") );
-						
-						healthJournal.name().set("Ola Normann");
-						healthJournal.gender().set("kvinne");
-						healthJournal.age().set("42");
-						healthJournal.balance().set("480 000");
-						healthJournal.physicalHealth().set( 80 );
-						healthJournal.mentalHealth().set( 0 );
-						healthJournal.risks().set( "ALS", 50 );
-						healthJournal.risks().set( "Kreft", 30 );
-						
-						Game.animate();
-						Tweens.firstSequence.start();
-						Tweens.secondSequence.start();
-						
-						document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-					}
-				};
+					});
+				});
 				
-				loadQueue++;
-				Textures.wood = THREE.ImageUtils.loadTexture("tex/teak.jpg", {}, function() { loadCallback(); });
+				var p0 = p.promise();
+				var p1 = p.promise();
+				var p3 = p.promise();
+				
+				CssOverlay = $( "#wrapper" );
+				CssOverlay.css({
+					width	: $(window).width(),
+					height	: $(window).height(),
+					opacity	: 0
+				});
+				
+				PlayerDetails = $( "#playerDetails" );
+				PlayerDetails.hide();
+				
+				Textures.wood = THREE.ImageUtils.loadTexture("tex/teak.jpg", {}, p0);
 				Textures.wood.wrapS = THREE.RepeatWrapping;
 				Textures.wood.wrapT = THREE.RepeatWrapping;
 				Textures.wood.repeat.set(10, 10);
 				Textures.wood.needsUpdate = true;
 				
-				loadQueue++;
-				Textures.board = THREE.ImageUtils.loadTexture("tex/board.png", {}, function() { loadCallback(); });
+				Textures.board = THREE.ImageUtils.loadTexture("tex/board.png", {}, p1);
 				Textures.board.wrapS = THREE.RepeatWrapping;
 				Textures.board.wrapT = THREE.RepeatWrapping;
 				Textures.board.repeat.set(1, 1);
 				Textures.board.needsUpdate = true;
 				
-				loadQueue++;
 				var loader = new THREE.ColladaLoader();
 				loader.options.convertUpAxis = true;
 				loader.load("clipboard.dae", function ( collada ) {
@@ -543,11 +649,50 @@
 					Utils.recursivelyEnableShadowForCollada(dae.children);
 					
 					Models.clipBoard = dae;
-					loadCallback();
+					p3();
 				});
 			});
 		</script>
 		<style>
+			#playerDetails {
+				position: absolute;
+				z-index: 200;
+				float: left;
+				clear: both;
+			}
+			
+			#playerDetails .name {
+				text-transform: uppercase;
+				font-family: Open Sans;
+				font-weight: 300;
+				font-size: 16px;
+				padding: 5px;
+				text-align: center;
+				border-radius: 5px;
+				margin-bottom: 10px;
+			}
+			
+			#playerDetails input[type=button] {
+				text-transform: uppercase;
+				font-family: Open Sans;
+				font-weight: 300;
+				font-size: 16px;
+				padding: 5px;
+				text-align: center;
+				border-radius: 5px;
+				background-color: #C60202;
+				color: #fff;
+			}
+			
+			#playerDetails p {
+				text-align: center;
+			}
+			
+			#playerDetails .sex {
+				background: #f00;
+				display: block;
+			}
+			
 			#wrapper {
 				-webkit-transform-style: preserve-3d; 
 				-webkit-perspective-origin: 50% 50%;
@@ -591,11 +736,14 @@
 			h1 {
 				font-family: Open Sans;
 				font-weight: 300;
+				margin: 0;
 			}
 			
 			h2 {
 				font-family: Open Sans;
 				font-weight: 600;
+				text-transform: uppercase;
+				margin: 0;
 			}
 			
 			.picture {
@@ -724,9 +872,20 @@
 				width: 100px !important;
 			}
 		</style>
+		<div id="playerDetails">
+			<p>
+				<input type="text" value="" class="name" placeholder="navn"/>
+			</p>
+			<p>
+				<span>
+					<input type="button" value="Mann" class="male">
+					<input type="button" value="Kvinne" class="female">
+				</span>
+			</p>
+		</div>
 		<div id="wrapper">
 			<div class="camera">
-				<div class="object healthJournal">
+				<div class="object HealthJournal">
 					<div class="header">
 						<div class="colorBar"></div>
 						<div class="headerText">
@@ -744,6 +903,10 @@
 							<div class="line">
 								<p class="key">ALDER</p>
 								<p class="val age">25</p>
+							</div>
+							<div class="line">
+								<p class="key">INNTEKT</p>
+								<p class="val salary">0</p>
 							</div>
 							<div class="line">
 								<p class="key">FORMUE</p>
