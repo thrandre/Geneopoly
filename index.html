@@ -1,9 +1,7 @@
 <html>
 	<head>
 		<script src="js/lib/jquery.js"></script>
-		<script src="js/lib/jquery.translate.js"></script>
 		<script src="js/lib/three.js"></script>
-		<script src="js/lib/three.css3d.js"></script>
 		<script src="js/lib/tween.js"></script>
 		<script src="js/lib/three.collada.js"></script>
 		<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600' rel='stylesheet' type='text/css' />
@@ -32,6 +30,7 @@
 					
 					return vector;
 				},
+				
 				toSceneCoordinates	: function( e ) {
 					var projector = new THREE.Projector();
 					
@@ -43,6 +42,7 @@
 					
 					return intersects;
 				},
+				
 				recursivelyEnableShadowForCollada	: function( childrenArray ) {
 					if( childrenArray.length > 0 ) {
 						for( var i in childrenArray ) {
@@ -57,17 +57,11 @@
 				}
 			};
 			
-			var Camera, Scene, Renderer, El, CssOverlay, PlayerDetails;
+			var Camera, Scene, Renderer, El, CssOverlay, PlayerDetails, CameraController;
 			
-			var Objects = {
-				worldPlane	: null,
-				gameBoard	: null
-			};
-			
-			var Textures = {
-			};
-			
-			var Materials = {
+			var Objects 		= {};
+			var Textures 		= {};
+			var Materials 		= {
 				whitePhong	: new THREE.MeshPhongMaterial({
 					color: 0xFFFFFF
 				}),
@@ -78,29 +72,42 @@
 					color: 0xFFFFFF
 				})
 			};
-			
-			var Models = {
-				shoes	: null
+			var Models 			= {};
+			var Light 			= {};
+			var CameraStates 	= {
+				start: {
+					position	: { x: -250, 		y: -50, 		z: 800 			},
+					rotation	: { x: 0, 			y: 0, 			z: Math.PI / 4 	}
+				},
+				journal: {
+					position	: { x: 585, 		y: -350, 		z: 1000 		},
+					rotation	: { x: Math.PI / 6,	y: 0, 			z: 0 			}
+				},
+				boardSide1: {
+					position	: { x: -300, 		y: -800, 		z: 1200 		},
+					rotation	: { x: Math.PI / 6,	y: 0, 			z: 0 			}
+				},
+				boardSide2: {
+					position	: { x: -1100, 		y: 0, 			z: 1200 		},
+					rotation	: { x: 0,			y: -Math.PI / 6,z: -Math.PI / 2	}
+				},
+				boardSide3: {
+					position	: { x: -300, 		y: 800, 		z: 1200 		},
+					rotation	: { x: -Math.PI / 6,y: 0,			z: -Math.PI		}
+				},
+				boardSide4: {
+					position	: { x: 500, 		y: 0,	 		z: 1200 		},
+					rotation	: { x: 0,			y: Math.PI / 6,	z: -1.5*Math.PI	}
+				}
 			};
-			
-			var Light = {
-				mainLight	: null
-			};
-			
-			var Tweens = {};
-			
-			var CameraMovements = {};
 			
 			var Game = {
 				init: function() {
 					Scene = new THREE.Scene();
 					
 					Camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 1000000 );
-					Camera.position.x = -250;
-					Camera.position.y = -50;
-					Camera.position.z = 800;
-					
-					Camera.rotation.z = Math.PI / 4;
+					$.extend( Camera.position, CameraStates.start.position);
+					$.extend( Camera.rotation, CameraStates.start.rotation);
 					
 					Materials.woodLambert = new THREE.MeshPhongMaterial({
 						map: Textures.wood 
@@ -113,6 +120,17 @@
 					Materials.paper = new THREE.MeshPhongMaterial({
 						map: Textures.paper 
 					});
+					
+					Materials.card = new THREE.MeshPhongMaterial({
+						map: Textures.card
+					});
+					
+					Materials.dice = [];
+					for( var i = 0; i < 6; i++ ) {
+						Materials.dice[ i ] = new THREE.MeshPhongMaterial({
+							map: Textures.dice[ i ]
+						});
+					}
 					
 					Objects.worldPlane = new THREE.Mesh( 
 						new THREE.PlaneGeometry(100000, 100000, 1, 1),
@@ -160,12 +178,31 @@
 					Objects.invisiPlane.position.z = 210;
 					
 					Objects.dice = new THREE.Mesh(
-						new THREE.CubeGeometry(50, 50, 50),
-						Materials.whitePhong
+						new THREE.CubeGeometry( 30, 30, 30, 1, 1, 1 ),
+						new THREE.MeshFaceMaterial( Materials.dice )
 					);
 					
-					Objects.dice.position.z = 230;
-					Objects.dice.position.x = -75;
+					Objects.dice.position.z = 20;
+					Objects.dice.position.y = -104;
+					Objects.dice.position.x = 104;
+					
+					for( var z = 0; z < 50; z++ ) {
+						var c = new THREE.Mesh(
+							new THREE.CubeGeometry( 200, 110, 1 ),
+							Materials.card
+						);
+						c.position.z = 5 + (z / 2);
+						c.position.x = -104;
+						c.position.y = 104;
+						c.rotation.z = ((-1 + (Math.random() * 2)) * (Math.PI / 128)) + Math.PI / 4;
+						
+						Objects.gameBoard.add( c );
+						
+						if( z == 49 )
+							Objects.topCard = c;
+					}
+					
+					Objects.gameBoard.add( Objects.dice );
 					
 					Light.mainLight = new THREE.SpotLight(0xFFFFFF, 0.5);
 
@@ -201,7 +238,6 @@
 					Scene.add( Objects.gameBoard );
 					Scene.add( Objects.clipBoard );
 					Scene.add( Objects.invisiPlane );
-					Scene.add( Objects.dice );
 					Scene.add( Light.mainLight );
 					Scene.add( Light.helperLight );
 					Scene.add( Light.helperLight2 );
@@ -219,40 +255,7 @@
 					El = $( Renderer.domElement );
 					$( document.body ).append( El );
 					
-					Game.registerCameraMovements();
-				},
-				registerCameraMovements: function() {
-					CameraMovements.reset = function( cb ) {
-						var p = new Parallel( cb );
-						var p0 = p.promise();
-						var p1 = p.promise();
-						Tweens.t0 = new TWEEN.Tween( Camera.position )
-							.to({ x: -250, y: -50, z: 800 }, 500)
-							.easing( TWEEN.Easing.Cubic.InOut )
-							.onComplete( p0 )
-							.start();
-						Tweens.r0 = new TWEEN.Tween( Camera.rotation )
-							.to({ x:0, y: 0, z: Math.PI / 4 }, 500)
-							.easing( TWEEN.Easing.Cubic.InOut )
-							.onComplete( p1 )
-							.start();
-					};
-					
-					CameraMovements.showJournal = function( cb ) {
-						var p = new Parallel( cb );
-						var p0 = p.promise();
-						var p1 = p.promise();
-						Tweens.t1 = new TWEEN.Tween( Camera.position )
-							.to({ x: 585, y: -350, z: 1000 }, 3000)
-							.easing( TWEEN.Easing.Cubic.InOut )
-							.onComplete( p0 )
-							.start();
-						Tweens.r1 = new TWEEN.Tween( Camera.rotation )
-							.to({ z: 0, x: Math.PI/6 }, 3000)
-							.easing( TWEEN.Easing.Cubic.InOut )
-							.onComplete( p1 )
-							.start();
-					};
+					CameraController = new CameraControllerScaffolding( Camera, CameraStates );
 				},
 				showPlayerDetails: function() {
 					var screen = Utils.toScreenCoordinates( new THREE.Vector3( -270, -30, 210 ) );
@@ -262,7 +265,7 @@
 						top		: screen.y
 					});
 					PlayerDetails.find( ".name" ).focus();
-					PlayerDetails.find("input[type=button]").click(function() {
+					PlayerDetails.find("input[type=button]").click(function() {						
 						var sex = $(this).attr("class");
 						var name = PlayerDetails.find(".name").val();
 						if( name === "") {
@@ -271,7 +274,9 @@
 						}
 						Game.setInitialJournalValues( name, sex );
 						PlayerDetails.fadeOut(500, function() {
-							CameraMovements.showJournal();
+							CameraController.go( "journal", 1500, function() {
+								CameraController.go( "boardSide1", 1500);
+							}, 3000);
 						});
 					});
 				},
@@ -288,7 +293,7 @@
 					DivMapping.map( Objects.invisiPlane, CssOverlay.find( ".HealthJournal" ) );
 					
 					CssOverlay.css( "opacity", 1 );
-					CameraMovements.reset();
+					CameraController.go( "start", 500 );
 					
 					Game.animate();
 					
@@ -305,6 +310,7 @@
 			var onDocumentMouseDown = function(e) {
 				var p3d = Utils.toSceneCoordinates( e );
 				console.log( p3d );
+				DiceController.roll();
 			};
 			
 			var Parallel = function( cb ) {
@@ -585,39 +591,79 @@
 				};
 			})();
 			
-			var states = {
-				start: {
-					translation	: { x: 0, y: 0, z: 0 },
-					rotation	: { x: 0, y: 0, z: 0 }
-				}
+			var CameraControllerScaffolding = function( camera, states ) {
+				
+				return {
+					getOptimalBeta: function( alpha, beta ) {
+						var d0 	= beta - alpha;
+						var d1 	= (-2 * Math.PI + beta) - alpha;						
+						return Math.abs( d0 ) > Math.abs( d1 ) ? (alpha + d1) : (alpha + d0);
+					},
+					getRotationVector: function( aVec, bVec ) {
+						var vec = { x: 0, y: 0, z: 0 };
+						for( var k in vec ) vec[ k ] = this.getOptimalBeta( aVec[ k ], bVec[ k ] );
+						return vec;
+					},
+					go: function( state, duration, cb, hold ) {
+						var p = new Parallel(function() {
+							if( cb ) {
+								if( hold > 0 ) {
+									window.setTimeout( cb, hold );
+								}
+								else {
+									cb();
+								}
+							}
+						});
+						
+						var p0 = p.promise();
+						var p1 = p.promise();
+						
+						new TWEEN.Tween( camera.position )
+							.to(states[ state ][ "position" ], duration)
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.onComplete( p0 )
+							.start();
+						
+						var rot = this.getRotationVector( camera.rotation, states[ state ][ "rotation" ] );
+						
+						new TWEEN.Tween( camera.rotation )
+							.to(rot, duration)
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.onComplete( p1 )
+							.start();
+					}
+				};
 			};
 			
-			var CameraController = function( camera, states ) {
-				
-			};
+			var DiceController = (function() {
+				return {
+					diceFaces: [
+						{ x: 0, 			z: 0, y: 0 },
+						{ x: 0, 			z: 0, y: Math.PI	},
+						{ x: Math.PI/2, 	z: 0, y: 0			},
+						{ x: 1.5*Math.PI,	z: 0, y: 0			},
+						{ x: 0,				z: 0, y: Math.PI/2	},
+						{ x: Math.PI,		z: 0, y: 0			}
+					],
+					roll: function( cb ) {
+						var rand = Math.floor( (Math.random() * 5) );
+						$.extend( Objects.dice.rotation, this.diceFaces[ rand ] );
+						console.log( rand+1 );
+					}
+				};
+			})();
 			
 			$(function() {
 				var p = new Parallel(function() {
 					Game.init();
 					Game.start();
-					$(window).resize(function() {
-						Renderer.setSize( $(window).width(), $(window).height() );
-						Camera.aspect = $(window).width() / $(window).height();
-						Camera.updateProjectionMatrix();
-						DivMapping.setup( Camera, CssOverlay );
-						if( PlayerDetails.is(":visible") ) {
-							Game.showPlayerDetails();
-						}
-						CssOverlay.css({
-							width	: $(window).width(),
-							height	: $(window).height()
-						});
-					});
 				});
 				
 				var p0 = p.promise();
 				var p1 = p.promise();
 				var p3 = p.promise();
+				var p4 = p.promise();
 				
 				CssOverlay = $( "#wrapper" );
 				CssOverlay.css({
@@ -641,6 +687,18 @@
 				Textures.board.repeat.set(1, 1);
 				Textures.board.needsUpdate = true;
 				
+				Textures.card = THREE.ImageUtils.loadTexture("tex/card.png", {}, p4);
+				Textures.card.wrapS = THREE.RepeatWrapping;
+				Textures.card.wrapT = THREE.RepeatWrapping;
+				Textures.card.repeat.set(1, 1);
+				Textures.card.needsUpdate = true;
+				
+				Textures.dice = [];
+				for( var i = 0; i < 6; i++ ) {
+					var cb = p.promise();
+					Textures.dice[ i ] = THREE.ImageUtils.loadTexture("tex/dice" + (i+1) + ".png", {}, cb);
+				}
+				
 				var loader = new THREE.ColladaLoader();
 				loader.options.convertUpAxis = true;
 				loader.load("clipboard.dae", function ( collada ) {
@@ -651,6 +709,22 @@
 					Models.clipBoard = dae;
 					p3();
 				});
+				
+				$(window).resize(function() {
+					Renderer.setSize( $(window).width(), $(window).height() );
+					Camera.aspect = $(window).width() / $(window).height();
+					Camera.updateProjectionMatrix();
+					DivMapping.setup( Camera, CssOverlay );
+					if( PlayerDetails.is(":visible") ) {
+						Game.showPlayerDetails();
+					}
+					CssOverlay.css({
+						width	: $(window).width(),
+						height	: $(window).height()
+					});
+				});
+				
+				document.addEventListener( "mousedown", onDocumentMouseDown, false );
 			});
 		</script>
 		<style>
@@ -697,6 +771,8 @@
 				-webkit-transform-style: preserve-3d; 
 				-webkit-perspective-origin: 50% 50%;
 			}
+			
+			html:-webkit-full-screen {}
 			
 			.camera {
 				-webkit-transform-style: preserve-3d;
@@ -894,7 +970,7 @@
 						</div>
 					</div>
 					<div class="bio">
-						<img class="picture" src="meth.png" />
+						<img class="picture" />
 						<div class="bioInfo">
 							<div class="line">
 								<p class="key">KJØNN</p>
