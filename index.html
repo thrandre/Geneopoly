@@ -31,14 +31,14 @@
 					return vector;
 				},
 				
-				toSceneCoordinates	: function( e ) {
+				clickedObjects : function( e ) {
 					var projector = new THREE.Projector();
 					
 					var vector = new THREE.Vector3( (e.clientX / window.innerWidth) * 2 - 1,  -(e.clientY / window.innerHeight) * 2 + 1, 0.5 );
 					projector.unprojectVector( vector, Camera);
 					
 					var ray = new THREE.Raycaster( Camera.position, vector.subSelf( Camera.position ).normalize() );
-					var intersects = ray.intersectObjects($.map(Objects, function(val, key) { return val; }));
+					var intersects = ray.intersectObjects( $.map(Objects, function(val, key) { return val; }), true );
 					
 					return intersects;
 				},
@@ -58,15 +58,18 @@
 			};
 			
 			var Camera, Scene, Renderer, El, CssOverlay, PlayerDetails, CameraController;
+			var GameLock, LetsRoll;
 			
 			var Objects 		= {};
 			var Textures 		= {};
 			var Materials 		= {
+				transparent	: new THREE.MeshBasicMaterial({ 
+					color: 0xffffff, 
+					transparent: true, 
+					opacity: 0 
+				}),
 				whitePhong	: new THREE.MeshPhongMaterial({
 					color: 0xFFFFFF
-				}),
-				redPhong	: new THREE.MeshPhongMaterial({
-					color: 0x0000FF
 				}),
 				woodLambert	: new THREE.MeshPhongMaterial({
 					color: 0xFFFFFF
@@ -183,8 +186,22 @@
 					);
 					
 					Objects.dice.position.z = 20;
-					Objects.dice.position.y = -104;
-					Objects.dice.position.x = 104;
+					Objects.dice.position.y = -112;
+					Objects.dice.position.x = 112;
+					
+					Objects.dice.castShadow = true;
+					Objects.dice.receiveShadow = true;
+					
+					Objects.invisiPlane2 = new THREE.Mesh(
+						new THREE.PlaneGeometry( 150, 150, 1, 1 ),
+						Materials.transparent
+					);
+					
+					Objects.invisiPlane2.position.x = 112;
+					Objects.invisiPlane2.position.y = -112;
+					Objects.invisiPlane2.position.z = 5.1;
+					
+					Objects.invisiPlane2.receiveShadow = true;
 					
 					for( var z = 0; z < 50; z++ ) {
 						var c = new THREE.Mesh(
@@ -202,14 +219,28 @@
 							Objects.topCard = c;
 					}
 					
+					Objects.piece = new THREE.Mesh(
+						new THREE.CubeGeometry( 30, 30, 60 ),
+						Materials.whitePhong
+					);
+					
+					Objects.piece.position.x = 410;
+					Objects.piece.position.y = -410;
+					Objects.piece.position.z = 35;
+					
+					Objects.piece.castShadow = true;
+					Objects.piece.receiveShadow = true;
+					
+					Objects.gameBoard.add( Objects.invisiPlane2 );
 					Objects.gameBoard.add( Objects.dice );
+					Objects.gameBoard.add( Objects.piece );
 					
 					Light.mainLight = new THREE.SpotLight(0xFFFFFF, 0.5);
 
 					Light.mainLight.position.z = 3000;
 					
 					Light.mainLight.castShadow = true;
-					Light.mainLight.shadowDarkness = 0.5;
+					Light.mainLight.shadowDarkness = 0.3;
 					//Light.mainLight.shadowCameraVisible = true;
 					
 					Light.helperLight = new THREE.SpotLight(0xFFFFFF, 0.5);
@@ -219,7 +250,7 @@
 					Light.helperLight.position.z = 1000;
 					
 					Light.helperLight.castShadow = true;
-					Light.helperLight.shadowDarkness = 0.5;
+					Light.helperLight.shadowDarkness = 0.3;
 					
 					Light.helperLight2 = new THREE.SpotLight(0xFFFFFF, 0.5);
 					
@@ -228,7 +259,8 @@
 					Light.helperLight2.position.z = 1000;
 					
 					Light.helperLight2.castShadow = true;
-					Light.helperLight2.shadowDarkness = 0.5;
+					Light.helperLight2.shadowDarkness = 0.3;
+					Light.helperLight2.shadowDarkness = 0.3;
 					//Light.helperLight2.shadowCameraVisible = true;
 					
 					//Camera.lookAt( Objects.gameBoard.position );
@@ -275,7 +307,10 @@
 						Game.setInitialJournalValues( name, sex );
 						PlayerDetails.fadeOut(500, function() {
 							CameraController.go( "journal", 1500, function() {
-								CameraController.go( "boardSide1", 1500);
+								CameraController.go( "boardSide1", 1500, function() {
+									GameLock = false;
+									LetsRoll.fadeIn();
+								});
 							}, 3000);
 						});
 					});
@@ -287,10 +322,14 @@
 					HealthJournal.balance().set( 20000 );
 					HealthJournal.physicalHealth().set( 100 );
 					HealthJournal.mentalHealth().set( 100 );
+					HealthJournal.changed();
 				},
 				start: function() {					
 					DivMapping.setup( Camera, CssOverlay );
 					DivMapping.map( Objects.invisiPlane, CssOverlay.find( ".HealthJournal" ) );
+					DivMapping.map( Objects.invisiPlane2, CssOverlay.find( ".lets " ));
+					
+					GameLock = true;
 					
 					CssOverlay.css( "opacity", 1 );
 					CameraController.go( "start", 500 );
@@ -298,6 +337,31 @@
 					Game.animate();
 					
 					Game.showPlayerDetails();
+				},
+				newTurn: function( eyes ) {
+					LetsRoll.fadeOut();
+					PieceController.move( eyes, function( state ) {
+						var cStateName = "boardSide" + state.camera;
+						CameraController.go( cStateName, 1000 );
+					},
+					function( newPosition ) {
+						HealthJournal.risks().set( "ALS", newPosition );
+						// Take action according to state-table
+						if( HealthJournal.changed() ) {
+							GameLock = true;
+							window.setTimeout(function() {
+								CameraController.go ( "journal", 1000, function() {
+									CameraController.go ( CameraController.previous(), 1000, function() {
+										GameLock = false;
+										LetsRoll.fadeIn();
+									});
+								}, 3000 );
+							}, 1000);
+						}
+						else {
+							LetsRoll.fadeIn();
+						}
+					});
 				},
 				animate	: function() {
 					requestAnimationFrame( Game.animate );
@@ -307,10 +371,22 @@
 				}
 			};
 			
-			var onDocumentMouseDown = function(e) {
-				var p3d = Utils.toSceneCoordinates( e );
-				console.log( p3d );
-				DiceController.roll();
+			var onDocumentMouseDown = function( e ) {
+				e.preventDefault();
+				if( GameLock ) return;
+				var intersects = Utils.clickedObjects( e );
+				var hitDice = false;
+				for( var i in intersects ) {
+					var o = intersects[ i ].object;
+					
+					if( o == Objects.dice ) {
+						hitDice = true;
+					}
+				}
+				
+				if( hitDice ) {
+					DiceController.roll( Game.newTurn );
+				}
 			};
 			
 			var Parallel = function( cb ) {
@@ -463,6 +539,19 @@
 					_diseases			: {},
 					_dJq				: $("<div class=\"d\"><p class=\"key\">ALS</p><p class=\"val\"><div class=\"progressBar\"><div class=\"perc\">30%</div><div class=\"bar\"></div></div></p></div>"),
 					
+					_changed: false,
+					
+					changed: function( c ) {
+						if( typeof( c ) !== "undefined" ) {
+							this._changed = c;
+						}
+						else {
+							var b = this._changed;
+							this._changed = false;
+							return b;
+						}
+					},
+					
 					name: function( ) {
 						var self = this;
 						return {
@@ -470,6 +559,7 @@
 								return self._nameTxt().text();
 							},
 							set: function( name ) {
+								self._changed = true;
 								self._nameTxt().text( name );
 							}
 						};
@@ -479,6 +569,7 @@
 						var self = this;
 						return {
 							set: function( url ) {
+								self._changed = true;
 								self._picture().attr( "src", url );
 							}
 						};
@@ -491,6 +582,7 @@
 								return self._genderTxt().text() === "mann" ? "male" : "female";
 							},
 							set: function( gender ) {
+								self._changed = true;
 								self._genderTxt().text( (gender === "male" ? "mann" : "kvinne") );
 							}
 						};
@@ -503,6 +595,7 @@
 								return parseInt( self._ageTxt().text() );
 							},
 							set: function( age ) {
+								self._changed = true;
 								self._ageTxt().text( age );
 							}
 						};
@@ -515,6 +608,7 @@
 								return parseInt( self._balanceTxt().text() );
 							},
 							set: function( balance ) {
+								self._changed = true;
 								self._balanceTxt().text( balance );
 							}
 						};
@@ -527,6 +621,7 @@
 								return parseInt( self._salaryTxt().text() );
 							},
 							set: function( salary ) {
+								self._changed = true;
 								self._salaryTxt().text( salaray );
 							}
 						};
@@ -539,6 +634,7 @@
 								return parseInt( self._physicalPrg().find( ".perc" ).text().replace( "%", "" ) );
 							},
 							set: function( h ) {
+								self._changed = true;
 								self._physicalPrg().find( ".bar" ).css( "width", h + "%" );
 								self._physicalPrg().find( ".perc" ).text( h + "%" );
 								self._updatePicture( h, self.mentalHealth().get() );
@@ -553,6 +649,7 @@
 								return parseInt( self._mentalPrg().find( ".perc" ).text().replace( "%", "" ) );
 							},
 							set: function( h ) {
+								self._changed = true;
 								self._mentalPrg().find( ".bar" ).css( "width", h + "%" );
 								self._mentalPrg().find( ".perc" ).text( h + "%" );
 								self._updatePicture( self.physicalHealth().get(), h );
@@ -561,6 +658,7 @@
 					},
 					
 					_updatePicture: function( p, m ) {
+						var self = this;
 						var state = ( p * m ) > 250 ? "good" : "bad";
 						var gender = this.gender().get();
 						if( this.name().get().toLowerCase().indexOf("chuck") != -1 ) {
@@ -569,6 +667,7 @@
 						else {
 							this.picture().set( "img/" + gender + "_" + state + ".jpg" );
 						}
+						self._changed = true;
 					},
 					
 					risks: function() {
@@ -585,6 +684,7 @@
 								}
 								self._diseases[ d ].find( ".bar" ).css( "width", p + "%" );
 								self._diseases[ d ].find( ".perc" ).text( p + "%" );
+								self._changed = true;
 							}
 						};
 					}
@@ -592,6 +692,9 @@
 			})();
 			
 			var CameraControllerScaffolding = function( camera, states ) {
+				
+				var currentState;
+				var prevState;
 				
 				return {
 					getOptimalBeta: function( alpha, beta ) {
@@ -604,8 +707,16 @@
 						for( var k in vec ) vec[ k ] = this.getOptimalBeta( aVec[ k ], bVec[ k ] );
 						return vec;
 					},
+					current: function() {
+						return currentState;
+					},
+					previous: function() {
+						return prevState;
+					},
 					go: function( state, duration, cb, hold ) {
 						var p = new Parallel(function() {
+							prevState = currentState;
+							currentState = state;
 							if( cb ) {
 								if( hold > 0 ) {
 									window.setTimeout( cb, hold );
@@ -637,22 +748,123 @@
 			};
 			
 			var DiceController = (function() {
+				var faces = [
+					{ x: 0, 			y: -Math.PI/2, 	z: 0 	},
+					{ x: 0, 			y: Math.PI/2, 	z: 0 	},
+					{ x: Math.PI/2, 	y: 0, 			z: 0 	},
+					{ x: 1.5*Math.PI,	y: 0, 			z: 0 	},
+					{ x: 0,				y: 0, 			z: 0 	},
+					{ x: Math.PI,		y: 0, 			z: 0 	}
+				];
+				
 				return {
-					diceFaces: [
-						{ x: 0, 			z: 0, y: 0 },
-						{ x: 0, 			z: 0, y: Math.PI	},
-						{ x: Math.PI/2, 	z: 0, y: 0			},
-						{ x: 1.5*Math.PI,	z: 0, y: 0			},
-						{ x: 0,				z: 0, y: Math.PI/2	},
-						{ x: Math.PI,		z: 0, y: 0			}
-					],
+					animate: function( rand, cb ) {
+						new TWEEN.Tween( Objects.dice.position )
+							.to({ z: 500 }, 250)
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.chain(
+								new TWEEN.Tween( Objects.dice.rotation )
+									.to( faces[ rand ], 250)
+									.easing( TWEEN.Easing.Cubic.InOut ),
+								new TWEEN.Tween( Objects.dice.position )
+									.to({ z: 20 }, 250)
+									.easing( TWEEN.Easing.Cubic.InOut )
+									.onComplete( function() { if( cb ) cb( (rand + 1) ); } )
+							)
+							.start();
+					},
 					roll: function( cb ) {
-						var rand = Math.floor( (Math.random() * 5) );
-						$.extend( Objects.dice.rotation, this.diceFaces[ rand ] );
-						console.log( rand+1 );
+						var rand = Math.floor( (Math.random() * 5.99) );
+						this.animate( rand, cb );
 					}
 				};
 			})();
+			
+			var PieceController = (function() {
+				var currentPosition = 1;
+				
+				var getMeasures = function( frame ) {
+					frame = ( frame % 24 === 0 ) ? 24 : frame % 24;
+					var side = ( frame % 6 === 0 ) ? Math.floor( frame / 6 ) : Math.floor( frame / 6 ) + 1;
+					var relPosition = (frame % 6 === 0) ? 6 : frame % 6;
+					return { side: side, rel: relPosition };
+				};
+				
+				var evalFrame = function( frame ) {
+					var moveSize, axis, direction;
+					var t = getMeasures( frame );
+					var n = getMeasures( frame + 1 );
+					
+					if( t.rel === 1 || n.rel === 1 ) moveSize = 150;
+					else moveSize = 125;
+					
+					if( t.side === 1 ) { axis = 0; 	direction = -1; 	}
+					if( t.side === 2 ) { axis = 1; 	direction = 1; 		}
+					if( t.side === 3 ) { axis = 0; 	direction = 1; 		}
+					if( t.side === 4 ) { axis = 1; 	direction = -1;		}
+					
+					return { axis: axis, direction: direction, size: moveSize, camera: n.side };
+				};
+				
+				var generateChain = function( obj, frame, steps, stepCb, doneCb ) {
+					var movesDone = 0;
+					
+					var moveDone = function( p ) {
+						movesDone++;
+						
+						if( stepCb )
+							stepCb( p );
+						
+						if( movesDone === steps ) {
+							if( doneCb ) {
+								var f = ((frame + steps) % 24 === 0) ? 24 : (frame + steps) % 24;
+								doneCb( f );
+							}
+						}
+						else {
+							var f = frame + movesDone;
+							move( f,  obj ).start();
+						}
+					};
+					
+					var move = function( f, obj ) {
+						var p = evalFrame( f );
+						var vec = { z: obj.position.z };
+						if( p.axis === 0 ) {
+							vec.x = obj.position.x + ( p.direction * p.size );
+							vec.y = obj.position.y;
+						}
+						if( p.axis === 1 ) {
+							vec.y = obj.position.y + ( p.direction * p.size );
+							vec.x = obj.position.x;
+						}
+						
+						return new TWEEN.Tween( obj.position )
+							.to( vec, 500 )
+							.easing( TWEEN.Easing.Cubic.InOut )
+							.onComplete( function() { moveDone( p ); } );
+					};
+					
+					return move( frame, obj );
+				};
+				
+				return {
+					move: function( steps, stepCb, doneCb ) {
+						GameLock = true;
+						var chain = generateChain( Objects.piece, currentPosition, steps, stepCb, function( newPosition ) {
+							currentPosition = newPosition;
+							GameLock = false;
+							doneCb( newPosition );
+						});
+						
+						chain.start();
+					}
+				};
+			})();
+			
+			/*var BoardController = (function() {
+				
+			})();*/
 			
 			$(function() {
 				var p = new Parallel(function() {
@@ -674,6 +886,9 @@
 				
 				PlayerDetails = $( "#playerDetails" );
 				PlayerDetails.hide();
+				
+				LetsRoll = $( ".lets" );
+				LetsRoll.fadeOut(0);
 				
 				Textures.wood = THREE.ImageUtils.loadTexture("tex/teak.jpg", {}, p0);
 				Textures.wood.wrapS = THREE.RepeatWrapping;
@@ -779,7 +994,7 @@
 				-webkit-transform-origin: 50% 50%;
 			}
 			
-			.object {
+			.HealthJournal {
 				width: 430px; 
 				height: 543px;
 				padding: 40px;
@@ -789,6 +1004,18 @@
 				-webkit-backface-visibility: hidden;
 				padding-top: 75px;
 				clear: both;
+			}
+			
+			.lets {
+				width: 150px; 
+				height: 150px;
+				position: absolute; 
+				-webkit-transform-style: preserve-3d;
+				-webkit-transform-origin: 50% 50%;
+				-webkit-backface-visibility: hidden;
+				clear: both;
+				background: url(tex/lets-01.png) no-repeat;
+				background-size: cover;
 			}
 			
 			.header {
@@ -961,6 +1188,8 @@
 		</div>
 		<div id="wrapper">
 			<div class="camera">
+				<div class="object lets">
+				</div>
 				<div class="object HealthJournal">
 					<div class="header">
 						<div class="colorBar"></div>
