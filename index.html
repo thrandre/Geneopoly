@@ -225,7 +225,7 @@
 					);
 					
 					Objects.piece.position.x = 410;
-					Objects.piece.position.y = -410;
+					Objects.piece.position.y = -420;
 					Objects.piece.position.z = 35;
 					
 					Objects.piece.castShadow = true;
@@ -309,7 +309,7 @@
 							CameraController.go( "journal", 1500, function() {
 								CameraController.go( "boardSide1", 1500, function() {
 									GameLock = false;
-									LetsRoll.fadeIn();
+									LetsRollController.show();
 								});
 							}, 3000);
 						});
@@ -339,28 +339,29 @@
 					Game.showPlayerDetails();
 				},
 				newTurn: function( eyes ) {
-					LetsRoll.fadeOut();
+					GameLock = true;
+					LetsRollController.hide();
 					PieceController.move( eyes, function( state ) {
 						var cStateName = "boardSide" + state.camera;
 						CameraController.go( cStateName, 1000 );
 					},
-					function( newPosition ) {
-						HealthJournal.risks().set( "ALS", newPosition );
-						// Take action according to state-table
-						if( HealthJournal.changed() ) {
-							GameLock = true;
-							window.setTimeout(function() {
-								CameraController.go ( "journal", 1000, function() {
-									CameraController.go ( CameraController.previous(), 1000, function() {
-										GameLock = false;
-										LetsRoll.fadeIn();
-									});
-								}, 3000 );
-							}, 1000);
-						}
-						else {
-							LetsRoll.fadeIn();
-						}
+					function( newPosition, passed ) {
+						BoardController.hit( newPosition, passed, function() {
+							if( HealthJournal.changed() ) {
+								window.setTimeout(function() {
+									CameraController.go ( "journal", 1000, function() {
+										CameraController.go ( CameraController.previous(), 1000, function() {
+											GameLock = false;
+											LetsRollController.show();
+										});
+									}, 3000 );
+								}, 1000);
+							}
+							else {
+								GameLock = false;
+								LetsRollController.show();
+							}
+						});
 					});
 				},
 				animate	: function() {
@@ -693,6 +694,7 @@
 			
 			var CameraControllerScaffolding = function( camera, states ) {
 				
+				var aCurrentState;
 				var currentState;
 				var prevState;
 				
@@ -708,10 +710,13 @@
 						return vec;
 					},
 					current: function() {
-						return currentState;
+						return aCurrentState;
 					},
 					previous: function() {
 						return prevState;
+					},
+					rotation: function() {
+						return states[ aCurrentState ].rotation;
 					},
 					go: function( state, duration, cb, hold ) {
 						var p = new Parallel(function() {
@@ -743,6 +748,8 @@
 							.easing( TWEEN.Easing.Cubic.InOut )
 							.onComplete( p1 )
 							.start();
+						
+						aCurrentState = state;
 					}
 				};
 			};
@@ -796,7 +803,7 @@
 					var n = getMeasures( frame + 1 );
 					
 					if( t.rel === 1 || n.rel === 1 ) moveSize = 150;
-					else moveSize = 125;
+					else moveSize = 130;
 					
 					if( t.side === 1 ) { axis = 0; 	direction = -1; 	}
 					if( t.side === 2 ) { axis = 1; 	direction = 1; 		}
@@ -818,7 +825,8 @@
 						if( movesDone === steps ) {
 							if( doneCb ) {
 								var f = ((frame + steps) % 24 === 0) ? 24 : (frame + steps) % 24;
-								doneCb( f );
+								var passed = (frame + steps) > 24;
+								doneCb( f, passed );
 							}
 						}
 						else {
@@ -850,11 +858,9 @@
 				
 				return {
 					move: function( steps, stepCb, doneCb ) {
-						GameLock = true;
-						var chain = generateChain( Objects.piece, currentPosition, steps, stepCb, function( newPosition ) {
+						var chain = generateChain( Objects.piece, currentPosition, steps, stepCb, function( newPosition, passed ) {
 							currentPosition = newPosition;
-							GameLock = false;
-							doneCb( newPosition );
+							doneCb( newPosition, passed );
 						});
 						
 						chain.start();
@@ -862,9 +868,102 @@
 				};
 			})();
 			
-			/*var BoardController = (function() {
-				
-			})();*/
+			var LetsRollController = {
+				show: function() {
+					Objects.invisiPlane2.rotation.z = CameraController.rotation().z;
+					LetsRoll.fadeIn( 500 );
+				},
+				hide: function() {
+					LetsRoll.fadeOut( 500 );
+				}
+			};
+			
+			var BoardStates = [
+				{ // 1 
+					type: "start"
+				},
+				{ // 2
+					type: "free" 
+				},
+				{ // 3
+					type: "free" 
+				},
+				{ // 4
+					type: "free" 
+				},
+				{ // 5
+					type: "free" 
+				},
+				{ // 6
+					type: "free" 
+				},
+				{ // 7
+					type: "free" 
+				},
+				{ // 8
+					type: "free" 
+				},
+				{ // 9
+					type: "free" 
+				},
+				{ // 10
+					type: "free" 
+				},
+				{ // 11
+					type: "free" 
+				},
+				{ // 12
+					type: "free" 
+				},
+				{ // 13
+					type: "free" 
+				},
+				{ // 14
+					type: "free" 
+				},
+				{ // 15
+					type: "free" 
+				},
+				{ // 16
+					type: "free" 
+				},
+				{ // 17
+					type: "free" 
+				},
+				{ // 18
+					type: "free" 
+				},
+				{ // 19
+					type: "free" 
+				},
+				{ // 20
+					type: "free" 
+				},
+				{ // 21
+					type: "free" 
+				},
+				{ // 22
+					type: "free" 
+				},
+				{ // 23
+					type: "free" 
+				},
+				{ // 24
+					type: "free" 
+				}
+			];
+			
+			var BoardController = (function() {
+				return {
+					hit: function( frame, passed, doneCb ) {
+						if( passed ) {
+							HealthJournal.balance().set( HealthJournal.balance().get() + 10000 );
+							HealthJournal.age().set( HealthJournal.age().get() + 4 );
+						}
+						doneCb();
+					}
+				};
+			})();
 			
 			$(function() {
 				var p = new Parallel(function() {
@@ -888,7 +987,7 @@
 				PlayerDetails.hide();
 				
 				LetsRoll = $( ".lets" );
-				LetsRoll.fadeOut(0);
+				LetsRoll.fadeOut( 0 );
 				
 				Textures.wood = THREE.ImageUtils.loadTexture("tex/teak.jpg", {}, p0);
 				Textures.wood.wrapS = THREE.RepeatWrapping;
@@ -1014,7 +1113,7 @@
 				-webkit-transform-origin: 50% 50%;
 				-webkit-backface-visibility: hidden;
 				clear: both;
-				background: url(tex/lets-01.png) no-repeat;
+				background: url(tex/lets.png) no-repeat;
 				background-size: cover;
 			}
 			
