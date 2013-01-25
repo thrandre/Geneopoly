@@ -178,7 +178,7 @@
 					
 					Objects.invisiPlane.position.x = 585;
 					Objects.invisiPlane.position.y = 140;
-					Objects.invisiPlane.position.z = 210;
+					Objects.invisiPlane.position.z = 205;
 					
 					Objects.dice = new THREE.Mesh(
 						new THREE.CubeGeometry( 30, 30, 30, 1, 1, 1 ),
@@ -311,7 +311,7 @@
 									GameLock = false;
 									LetsRollController.show();
 								});
-							}, 3000);
+							}, 10000);
 						});
 					});
 				},
@@ -343,18 +343,19 @@
 					LetsRollController.hide();
 					PieceController.move( eyes, function( state ) {
 						var cStateName = "boardSide" + state.camera;
-						CameraController.go( cStateName, 1000 );
+						if( cStateName !== CameraController.current() )
+							CameraController.go( cStateName, 1000 );
 					},
 					function( newPosition, passed ) {
 						BoardController.hit( newPosition, passed, function() {
 							if( HealthJournal.changed() ) {
 								window.setTimeout(function() {
-									CameraController.go ( "journal", 1000, function() {
+									CameraController.go( "journal", 1000, function() {
 										CameraController.go ( CameraController.previous(), 1000, function() {
 											GameLock = false;
 											LetsRollController.show();
 										});
-									}, 3000 );
+									}, 10000);
 								}, 1000);
 							}
 							else {
@@ -532,7 +533,7 @@
 					_genderTxt			: function() { return this._journal().find(".gender");	},
 					_ageTxt				: function() { return this._journal().find(".age");		},
 					_balanceTxt			: function() { return this._journal().find(".balance");	},
-					_salaryTxt			: function() { return this._journal().find(".salary");	},
+					_incomeTxt			: function() { return this._journal().find(".income");	},
 					_physicalPrg		: function() { return this._journal().find(".physical");},
 					_mentalPrg			: function() { return this._journal().find(".mental");	},
 					_diseasesBx			: function() { return this._journal().find(".diseases");},
@@ -543,8 +544,15 @@
 					_changed: false,
 					
 					changed: function( c ) {
+						var self = this;
 						if( typeof( c ) !== "undefined" ) {
 							this._changed = c;
+							if( c ) {
+								self.income().set( ((self.age().get() / 100) * (self.mentalHealth().get() / 100) * (self.physicalHealth().get() / 100) * 1000000) + 20000 );
+								if( self.physicalHealth().get() <= 0 ) {
+									window.location = "http://thekickback.com/rickroll/rickroll.php";
+								}
+							}
 						}
 						else {
 							var b = this._changed;
@@ -560,7 +568,7 @@
 								return self._nameTxt().text();
 							},
 							set: function( name ) {
-								self._changed = true;
+								self.changed( true );
 								self._nameTxt().text( name );
 							}
 						};
@@ -570,7 +578,7 @@
 						var self = this;
 						return {
 							set: function( url ) {
-								self._changed = true;
+								self.changed( true );
 								self._picture().attr( "src", url );
 							}
 						};
@@ -583,7 +591,7 @@
 								return self._genderTxt().text() === "mann" ? "male" : "female";
 							},
 							set: function( gender ) {
-								self._changed = true;
+								self.changed( true );
 								self._genderTxt().text( (gender === "male" ? "mann" : "kvinne") );
 							}
 						};
@@ -596,7 +604,7 @@
 								return parseInt( self._ageTxt().text() );
 							},
 							set: function( age ) {
-								self._changed = true;
+								self.changed( true );
 								self._ageTxt().text( age );
 							}
 						};
@@ -609,21 +617,20 @@
 								return parseInt( self._balanceTxt().text() );
 							},
 							set: function( balance ) {
-								self._changed = true;
+								self.changed( true );
 								self._balanceTxt().text( balance );
 							}
 						};
 					},
 					
-					salary: function( ) {
+					income: function( ) {
 						var self = this;
 						return {
 							get: function() {
-								return parseInt( self._salaryTxt().text() );
+								return parseInt( self._incomeTxt().text() );
 							},
-							set: function( salary ) {
-								self._changed = true;
-								self._salaryTxt().text( salaray );
+							set: function( income ) {
+								self._incomeTxt().text( income );
 							}
 						};
 					},
@@ -635,7 +642,9 @@
 								return parseInt( self._physicalPrg().find( ".perc" ).text().replace( "%", "" ) );
 							},
 							set: function( h ) {
-								self._changed = true;
+								if( h > 100 ) h = 100;
+								if( h < 0 ) h = 0;
+								self.changed( true );
 								self._physicalPrg().find( ".bar" ).css( "width", h + "%" );
 								self._physicalPrg().find( ".perc" ).text( h + "%" );
 								self._updatePicture( h, self.mentalHealth().get() );
@@ -650,7 +659,9 @@
 								return parseInt( self._mentalPrg().find( ".perc" ).text().replace( "%", "" ) );
 							},
 							set: function( h ) {
-								self._changed = true;
+								if( h > 100 ) h = 100;
+								if( h < 0 ) h = 0;
+								self.changed( true );
 								self._mentalPrg().find( ".bar" ).css( "width", h + "%" );
 								self._mentalPrg().find( ".perc" ).text( h + "%" );
 								self._updatePicture( self.physicalHealth().get(), h );
@@ -660,15 +671,18 @@
 					
 					_updatePicture: function( p, m ) {
 						var self = this;
-						var state = ( p * m ) > 250 ? "good" : "bad";
+						var state = ( p + m ) > 100 ? "good" : "bad";
 						var gender = this.gender().get();
 						if( this.name().get().toLowerCase().indexOf("chuck") != -1 ) {
 							this.picture().set( "img/chuck.jpg" );
 						}
+						else if( this.name().get().toLowerCase().indexOf("eivind") != -1 ) {
+							this.picture().set( "img/eivind.jpg" );
+						}
 						else {
 							this.picture().set( "img/" + gender + "_" + state + ".jpg" );
 						}
-						self._changed = true;
+						self.changed( true );
 					},
 					
 					risks: function() {
@@ -685,7 +699,7 @@
 								}
 								self._diseases[ d ].find( ".bar" ).css( "width", p + "%" );
 								self._diseases[ d ].find( ".perc" ).text( p + "%" );
-								self._changed = true;
+								self.changed( true );
 							}
 						};
 					}
@@ -697,6 +711,7 @@
 				var aCurrentState;
 				var currentState;
 				var prevState;
+				var aPrevState;
 				
 				return {
 					getOptimalBeta: function( alpha, beta ) {
@@ -709,19 +724,30 @@
 						for( var k in vec ) vec[ k ] = this.getOptimalBeta( aVec[ k ], bVec[ k ] );
 						return vec;
 					},
+					normalize: function( vec ) {
+						vec.x = vec.x % (2*Math.PI);
+						vec.y = vec.y % (2*Math.PI);
+						vec.z = vec.z % (2*Math.PI);
+					},
 					current: function() {
 						return aCurrentState;
 					},
 					previous: function() {
-						return prevState;
+						return aPrevState;
 					},
 					rotation: function() {
 						return states[ aCurrentState ].rotation;
 					},
 					go: function( state, duration, cb, hold ) {
+						var self = this;
 						var p = new Parallel(function() {
+							aPrevState = currentState;
+							aCurrentState = state;
 							prevState = currentState;
 							currentState = state;
+							
+							self.normalize( camera.rotation );
+							
 							if( cb ) {
 								if( hold > 0 ) {
 									window.setTimeout( cb, hold );
@@ -731,6 +757,9 @@
 								}
 							}
 						});
+						
+						aPrevState = currentState;
+						aCurrentState = state;
 						
 						var p0 = p.promise();
 						var p1 = p.promise();
@@ -742,14 +771,11 @@
 							.start();
 						
 						var rot = this.getRotationVector( camera.rotation, states[ state ][ "rotation" ] );
-						
 						new TWEEN.Tween( camera.rotation )
 							.to(rot, duration)
 							.easing( TWEEN.Easing.Cubic.InOut )
 							.onComplete( p1 )
 							.start();
-						
-						aCurrentState = state;
 					}
 				};
 			};
@@ -878,6 +904,50 @@
 				}
 			};
 			
+			var RiskController = (function() {
+				
+				var risks = {
+					influenza		: { risk: 0, phImpact: 10, mhImpact: 10 },
+					heartAttack		: { risk: 0, phImpact: 50, mhImpact: 50 },
+					stroke			: { risk: 0, phImpact: 50, mhImpact: 50 },
+					breastCancer	: { risk: 0, phImpact: 40, mhImpact: 50 },
+					cysticFibrosis	: { risk: 0, phImpact: 30, mhImpact: 20 },
+					lplu			: { risk: 0, phImpact: 20, mhImpact: 20 }
+				};
+				
+				return {
+					generate: function() {
+						var sum = 0;
+						for( var k in risks ) {
+							if( k !== "influenza" ) {
+								var r = Math.random() * 0.2;
+								risks[ k ].lower = sum;
+								sum = sum + r;
+								risks[ k ].risk = r;
+								risks[ k ].upper = sum;
+							}
+						}
+						risks[ "influenza" ].risk = 1 - sum;
+						risks[ "influenza" ].lower = sum;
+						risks[ "influenza" ].upper = 1;
+					},
+					get: function() {
+						return risks;
+					},
+					getRandom: function() {
+						var a = Math.random();
+						var sickness;
+						for( var s in risks ) {
+							if( a >= risks[ s ].lower && a < risks[ s ].upper ) {
+								return { sickness: s, risk: risks[ s ].risk, phImpact: risks[ s ].phImpact, mhImpact: risks[ s ].mhImpact };
+							}
+						}
+						
+						return { sickness: "influenza", risk: risks[ "influenza" ].risk, phImpact: risks[ "influenza" ].phImpact, mhImpact: risks[ "influenza" ].mhImpact }
+					}
+				};
+			})();
+			
 			var BoardStates = [
 				{ // 1 
 					type: "start"
@@ -892,13 +962,13 @@
 					type: "free" 
 				},
 				{ // 5
-					type: "free" 
+					type: "sickness" 
 				},
 				{ // 6
-					type: "free" 
+					type: "exercise" 
 				},
 				{ // 7
-					type: "free" 
+					type: "seq" 
 				},
 				{ // 8
 					type: "free" 
@@ -910,13 +980,13 @@
 					type: "free" 
 				},
 				{ // 11
-					type: "free" 
+					type: "sickness" 
 				},
 				{ // 12
-					type: "free" 
+					type: "exercise" 
 				},
 				{ // 13
-					type: "free" 
+					type: "seq" 
 				},
 				{ // 14
 					type: "free" 
@@ -928,13 +998,13 @@
 					type: "free" 
 				},
 				{ // 17
-					type: "free" 
+					type: "sickness" 
 				},
 				{ // 18
-					type: "free" 
+					type: "exercise" 
 				},
 				{ // 19
-					type: "free" 
+					type: "seq" 
 				},
 				{ // 20
 					type: "free" 
@@ -946,21 +1016,56 @@
 					type: "free" 
 				},
 				{ // 23
-					type: "free" 
+					type: "sickness" 
 				},
 				{ // 24
-					type: "free" 
+					type: "exercise" 
 				}
 			];
 			
 			var BoardController = (function() {
+				RiskController.generate();
+				
 				return {
 					hit: function( frame, passed, doneCb ) {
+						console.log( HealthJournal.physicalHealth().get() );
 						if( passed ) {
-							HealthJournal.balance().set( HealthJournal.balance().get() + 10000 );
+							HealthJournal.balance().set( HealthJournal.balance().get() + HealthJournal.income().get() );
 							HealthJournal.age().set( HealthJournal.age().get() + 4 );
 						}
+						
+						var state = BoardStates[ frame-1 ];
+						if( state.type === "seq" ) {
+							var risks = RiskController.get();
+							
+							HealthJournal.risks().set( r.sickness, Math.round(r.risk * 100) );
+							if( r.risk > 0.05 ) {
+								HealthJournal.mentalHealth().set( HealthJournal.mentalHealth().get() - 10 );
+							}
+							
+							HealthJournal.balance().set( HealthJournal.balance().get() - 10000 );
+						}
+						else if( state.type === "sickness" ) {
+							var r = RiskController.getRandom();
+							console.log( r );
+							HealthJournal.physicalHealth().set( HealthJournal.physicalHealth().get() - r.phImpact );
+							HealthJournal.mentalHealth().set( HealthJournal.mentalHealth().get() - r.mhImpact );
+						}
+						else if( state.type === "exercise" ) {
+							HealthJournal.physicalHealth().set( HealthJournal.physicalHealth().get() + 20 );
+							HealthJournal.mentalHealth().set( HealthJournal.mentalHealth().get() + 20 );
+							HealthJournal.balance().set( HealthJournal.balance().get() - 5000 );
+						}
+						
 						doneCb();
+					}
+				};
+			})();
+			
+			var CardController = (function() {
+				return {
+					draw: function() {
+						
 					}
 				};
 			})();
@@ -1310,7 +1415,7 @@
 							</div>
 							<div class="line">
 								<p class="key">INNTEKT</p>
-								<p class="val salary">0</p>
+								<p class="val income">0</p>
 							</div>
 							<div class="line">
 								<p class="key">FORMUE</p>
