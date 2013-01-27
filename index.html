@@ -2,6 +2,7 @@
 	<head>
 		<script src="js/lib/jquery.js"></script>
 		<script src="js/lib/three.js"></script>
+		<script src="js/lib/three.divMapper.js"></script>
 		<script src="js/lib/tween.js"></script>
 		<script src="js/lib/three.collada.js"></script>
 		<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600' rel='stylesheet' type='text/css' />
@@ -54,25 +55,12 @@
 				display: block;
 			}
 			
-			#wrapper {
-				-webkit-transform-style: preserve-3d; 
-				-webkit-perspective-origin: 50% 50%;
-			}
-			
-			.CameraInstance {
-				-webkit-transform-style: preserve-3d;
-				-webkit-transform-origin: 50% 50%;
-			}
-			
-			.lets {
+			.letsRoll {
 				width: 150px; 
 				height: 150px;
-				position: absolute; 
-				-webkit-transform-style: preserve-3d;
-				-webkit-transform-origin: 50% 50%;
-				-webkit-backface-visibility: hidden;
 				clear: both;
 				background: url(tex/lets.png) no-repeat;
+				background-size: cover;
 				background-size: cover;
 			}
 			
@@ -302,13 +290,13 @@
 			var CameraInstance, 
 				SceneInstance, 
 				RendererInstance, 
-				El, 
-				CssOverlay, 
+				El,
 				PlayerDetails, 
 				CameraControllerInstance,
 				ClipBoardControllerInstance,
 				GameLock, 
-				LetsRoll;
+				LetsRoll,
+				DivMapperInstance;
 			
 			var Objects 		= {};
 			var Textures 		= {};
@@ -549,12 +537,12 @@
 					HealthJournal.changed();
 				},
 				start: function() {					
-					DivMapping.setup( CameraInstance, CssOverlay );
-					DivMapping.map( Objects.letsRollPlane, CssOverlay.find( ".lets " ));
+					DivMapperInstance = new THREE.DivMapper( CameraInstance, $(document.body) );					
+					DivMapperInstance.map( $( ".letsRoll" ), Objects.letsRollPlane);
+					DivMapperInstance.update();
 					
 					GameLock = true;
 					
-					CssOverlay.css( "opacity", 1 );
 					CameraControllerInstance.go( "start", 500 );
 					
 					Game.animate();
@@ -582,7 +570,7 @@
 					requestAnimationFrame( Game.animate );
 					RendererInstance.render( SceneInstance, CameraInstance );
 					TWEEN.update();
-					DivMapping._update();
+					DivMapperInstance.update();
 				}
 			};
 			
@@ -619,124 +607,6 @@
 					}
 				};
 			};
-			
-			var DivMapping = (function() {
-				return {
-					_camera		: null,
-					_fov		: 0,
-					_wrapperDiv	: null,
-					_cameraDiv	: null,
-					_glObjs		: [],
-					_divs		: [],
-					
-					setup: function( CameraInstance, wrapper ) {
-						this._camera = CameraInstance;
-						this._wrapperDiv = wrapper;
-						this._cameraDiv = wrapper.find( ".CameraInstance" );
-						
-						this._fov = 0.5 / Math.tan(this._camera.fov * Math.PI / 360) * wrapper.height();
-						
-						this._setWrapperStyle();
-						this._setCameraStyle();
-					},
-					
-					map: function( glObj, divObj ) {
-						this._glObjs.push( glObj );
-						this._divs.push( divObj );
-						this._update();
-					},
-					
-					_update: function() {
-						this._setWrapperStyle();
-						this._setCameraStyle();
-						for( var i in this._divs ) {
-							var d = this._divs[ i ];
-							var g = this._glObjs [ i ];						
-							this._setObjectStyle( d, g );
-						}
-					},
-					
-					_setWrapperStyle: function() {
-						this._wrapperDiv.css({
-							"-webkit-perspective"	: this._fov + "px",
-							"width"					: this._wrapperDiv.width() + "px",
-							"height"				: this._wrapperDiv.height() + "px",
-							"position"				: "absolute"
-						});
-					},
-					
-					_setCameraStyle: function() {
-						this._cameraDiv.css({
-							"-webkit-transform"		: "translate3d(0,0," + this._fov + "px)" + 
-													  this._getCameraCSSMatrix( this._camera ) + " " +
-													  "translate3d(" + ( this._wrapperDiv.width() / 2 ) + "px," + ( this._wrapperDiv.height() / 2 ) + "px, 0)",
-							"width"					: this._wrapperDiv.width(),
-							"height"				: this._wrapperDiv.height()
-						});		
-					},
-					
-					_setObjectStyle: function( div, obj ) {
-						div.css({
-							"-webkit-transform"		: this._getObjectCSSMatrix( div, obj )
-						});
-					},
-					
-					_epsilon: function ( value ) {
-						return Math.abs( value ) < 0.000001 ? 0 : value;
-					},
-					
-					_getCameraCSSMatrix: function ( CameraInstance ) {
-						var elements = CameraInstance.matrixWorldInverse.elements;
-						return 'matrix3d(' +
-							this._epsilon( elements[ 0 ] ) + ',' +
-							this._epsilon( - elements[ 1 ] ) + ',' +
-							this._epsilon( elements[ 2 ] ) + ',' +
-							this._epsilon( elements[ 3 ] ) + ',' +
-							this._epsilon( elements[ 4 ] ) + ',' +
-							this._epsilon( - elements[ 5 ] ) + ',' +
-							this._epsilon( elements[ 6 ] ) + ',' +
-							this._epsilon( elements[ 7 ] ) + ',' +
-							this._epsilon( elements[ 8 ] ) + ',' +
-							this._epsilon( - elements[ 9 ] ) + ',' +
-							this._epsilon( elements[ 10 ] ) + ',' +
-							this._epsilon( elements[ 11 ] ) + ',' +
-							this._epsilon( elements[ 12 ] ) + ',' +
-							this._epsilon( - elements[ 13 ] ) + ',' +
-							this._epsilon( elements[ 14 ] ) + ',' +
-							this._epsilon( elements[ 15 ] ) +
-						')';
-					},
-					
-					_getObjectCSSMatrix: function ( div, obj ) {
-						var elements = obj.matrixWorld.elements;
-						var fx = obj.geometry.width / div.outerWidth();
-						var fy = obj.geometry.height / div.outerHeight();
-						return 'translate3d(-50%,-50%,0) matrix3d(' +
-							this._epsilon( elements[ 0 ] ) + ',' +
-							this._epsilon( elements[ 1 ] ) + ',' +
-							this._epsilon( elements[ 2 ] ) + ',' +
-							this._epsilon( elements[ 3 ] ) + ',' +
-							this._epsilon( - elements[ 4 ] ) + ',' +
-							this._epsilon( - elements[ 5 ] ) + ',' +
-							this._epsilon( - elements[ 6 ] ) + ',' +
-							this._epsilon( - elements[ 7 ] ) + ',' +
-							this._epsilon( elements[ 8 ] ) + ',' +
-							this._epsilon( elements[ 9 ] ) + ',' +
-							this._epsilon( elements[ 10 ] ) + ',' +
-							this._epsilon( elements[ 11 ] ) + ',' +
-							this._epsilon( elements[ 12 ] ) + ',' +
-							this._epsilon( elements[ 13 ] ) + ',' +
-							this._epsilon( elements[ 14 ] ) + ',' +
-							this._epsilon( elements[ 15 ] ) +
-						')' + 
-						' scale3d(' +
-							this._epsilon( fx ) + ',' +
-							this._epsilon( fy ) + ',' +
-							'1' +
-						')';
-					}
-				};
-			})();
 			
 			var HealthJournal = (function() {
 				return {
@@ -1326,13 +1196,6 @@
 				var p1 = p.promise();
 				var p2 = p.promise();
 				
-				CssOverlay = $( "#wrapper" );
-				CssOverlay.css({
-					width	: $(window).width(),
-					height	: $(window).height(),
-					opacity	: 0
-				});
-				
 				PlayerDetails = $( "#playerDetails" );
 				PlayerDetails.hide();
 				
@@ -1367,15 +1230,9 @@
 					RendererInstance.setSize( $(window).width(), $(window).height() );
 					CameraInstance.aspect = $(window).width() / $(window).height();
 					CameraInstance.updateProjectionMatrix();
-					DivMapping.setup( CameraInstance, CssOverlay );
 					ClipBoardControllerInstance.place();
 					if( PlayerDetails.is(":visible") )
 						Game.promptPlayerDetails();
-					
-					CssOverlay.css({
-						width	: $(window).width(),
-						height	: $(window).height()
-					});
 				});
 				
 				document.addEventListener( "mousedown", onDocumentMouseDown, false );
@@ -1451,11 +1308,6 @@
 			</div>
 		</div>
 	
-		<div id="wrapper">
-			<div class="CameraInstance">
-				<div class="object lets">
-				</div>
-			</div>
-		</div>
+		<div class="letsRoll"></div>
 	</body>
 </html>
