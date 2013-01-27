@@ -14,6 +14,248 @@
 			body {
 				overflow: hidden;
 			}
+			
+			#playerDetails {
+				position: absolute;
+				z-index: 200;
+				float: left;
+				clear: both;
+			}
+			
+			#playerDetails .name {
+				text-transform: uppercase;
+				font-family: Open Sans;
+				font-weight: 300;
+				font-size: 16px;
+				padding: 5px;
+				text-align: center;
+				border-radius: 5px;
+				margin-bottom: 10px;
+			}
+			
+			#playerDetails input[type=button] {
+				text-transform: uppercase;
+				font-family: Open Sans;
+				font-weight: 300;
+				font-size: 16px;
+				padding: 5px;
+				text-align: center;
+				border-radius: 5px;
+				background-color: #C60202;
+				color: #fff;
+			}
+			
+			#playerDetails p {
+				text-align: center;
+			}
+			
+			#playerDetails .sex {
+				background: #f00;
+				display: block;
+			}
+			
+			#wrapper {
+				-webkit-transform-style: preserve-3d; 
+				-webkit-perspective-origin: 50% 50%;
+			}
+			
+			.CameraInstance {
+				-webkit-transform-style: preserve-3d;
+				-webkit-transform-origin: 50% 50%;
+			}
+			
+			.lets {
+				width: 150px; 
+				height: 150px;
+				position: absolute; 
+				-webkit-transform-style: preserve-3d;
+				-webkit-transform-origin: 50% 50%;
+				-webkit-backface-visibility: hidden;
+				clear: both;
+				background: url(tex/lets.png) no-repeat;
+				background-size: cover;
+			}
+			
+			.clipBoard {
+				width: 250px; 
+				height: 360px;
+				padding: 40px;
+				position: absolute; 
+				padding-top: 75px;
+				clear: both;
+				background: url(img/clipBoard.png) no-repeat;
+				background-size: 100%;
+				opacity: 0;
+				left: -311px;
+			}
+			
+			.clipboard .healthJournal {
+				float: left;
+				clear: both;
+			}
+			
+			.clipboard .healthJournal .header {
+				float: left;
+				clear: both;
+				margin-bottom: 20px;
+			}
+			
+			.clipboard .healthJournal .colorBar {
+				height: 50px;
+				width: 5px;
+				background: #f00;
+				margin-right: 10px;
+				float: left;
+			}
+			
+			.clipboard .healthJournal .headerText {
+				float: left;
+			}
+			
+			.clipboard .healthJournal h1 {
+				font-family: Open Sans;
+				font-weight: 300;
+				margin: 0;
+				font-size: 20px;
+			}
+			
+			.clipboard .healthJournal h2 {
+				font-family: Open Sans;
+				font-weight: 600;
+				text-transform: uppercase;
+				margin: 0;
+				font-size: 14px;
+			}
+			
+			.clipboard .healthJournal .picture {
+				width: 64px;
+				height: 64px;
+				float: left;
+				margin-right: 20px;
+			}
+			
+			.clipboard .healthJournal .bio {
+				float: left;
+				clear: both;
+				margin-bottom: 10px;
+			}
+			
+			.clipboard .healthJournal .bioInfo {
+				float: left;
+			}
+			
+			.bioInfo .line {
+				float: left;
+				clear: both;
+			}
+			
+			.bioInfo .key {
+				font-family: Open Sans;
+				font-size: 10px;
+				font-weight: 600;
+				float: left;
+				width: 100px;
+			}
+			
+			.bioInfo .val {
+				font-family: Open Sans;
+				font-size: 10px;
+				font-weight: 300;
+				float: left;
+			}
+			
+			.health {
+				float: left;
+				clear: both;
+				margin-bottom: 10px;
+			}
+			
+			.health .line {
+				margin-bottom: 10px;
+				float: left;
+				clear: both;
+			}
+			
+			.health .key {
+				font-family: Open Sans;
+				font-weight: 600;
+				font-size: 12px;
+				float: left;
+				clear: both;
+			}
+			
+			.health .val {
+				font-family: Open Sans;
+				font-weight: 300;
+				float: left;
+				clear: both;
+			}
+			
+			.progressBar {
+				width: 250px;
+				height: 8px;
+				border: 1px solid #333;
+				float: left;
+				clear: both;
+				padding: 0;
+			}
+			
+			.progressBar .bar {
+				width: 10%;
+				height: 100%;
+				background: #f00;
+			}
+			
+			.progressBar .perc {
+				width: 250px;
+				text-align: center;
+				position: absolute;
+				font-family: Open Sans;
+				font-weight: 600;
+				font-size: 8px;
+				margin-top: -2px;
+			}
+			
+			.risks {
+				float: left;
+				clear: both;
+			}
+			
+			.risks .key {
+				font-family: Open Sans;
+				font-weight: 600;
+				font-size: 12px;
+				float: left;
+				clear: both;
+			}
+			
+			.risks .diseases {
+				font-family: Open Sans;
+				font-weight: 300;
+				float: left;
+				clear: both;
+			}
+			
+			.risks .d {
+				float: left;
+				margin-right: 5px;
+			}
+			
+			.risks .d .key {
+				font-family: Open Sans;
+				font-weight: 600;
+				font-size: 12px;
+				float: left;
+				clear: both;
+			}
+			
+			.risks .d .progressBar {
+				width: 100px !important;
+			}
+			
+			.risks .d .progressBar .perc {
+				width: 100px !important;
+			}
 		</style>
 	</head>
 	<body>
@@ -23,7 +265,7 @@
 					var widthHalf = $(window).width() / 2;
 					var heightHalf = $(window).height() / 2;
 					var projector = new THREE.Projector();
-					var vector = projector.projectVector( position, Camera );
+					var vector = projector.projectVector( position, CameraInstance );
 					
 					vector.x = ( vector.x * widthHalf ) + widthHalf;
 					vector.y = - ( vector.y * heightHalf ) + heightHalf;
@@ -35,9 +277,9 @@
 					var projector = new THREE.Projector();
 					
 					var vector = new THREE.Vector3( (e.clientX / window.innerWidth) * 2 - 1,  -(e.clientY / window.innerHeight) * 2 + 1, 0.5 );
-					projector.unprojectVector( vector, Camera);
+					projector.unprojectVector( vector, CameraInstance);
 					
-					var ray = new THREE.Raycaster( Camera.position, vector.subSelf( Camera.position ).normalize() );
+					var ray = new THREE.Raycaster( CameraInstance.position, vector.subSelf( CameraInstance.position ).normalize() );
 					var intersects = ray.intersectObjects( $.map(Objects, function(val, key) { return val; }), true );
 					
 					return intersects;
@@ -57,77 +299,79 @@
 				}
 			};
 			
-			var Camera, Scene, Renderer, El, CssOverlay, PlayerDetails, CameraController;
-			var GameLock, LetsRoll;
+			var CameraInstance, 
+				SceneInstance, 
+				RendererInstance, 
+				El, 
+				CssOverlay, 
+				PlayerDetails, 
+				CameraControllerInstance,
+				ClipBoardControllerInstance,
+				GameLock, 
+				LetsRoll;
 			
 			var Objects 		= {};
 			var Textures 		= {};
 			var Materials 		= {
 				transparent	: new THREE.MeshBasicMaterial({ 
-					color: 0xffffff, 
-					transparent: true, 
-					opacity: 0 
+					color		: 0xffffff, 
+					transparent	: true, 
+					opacity		: 0 
 				}),
 				whitePhong	: new THREE.MeshPhongMaterial({
-					color: 0xFFFFFF
+					color		: 0xFFFFFF
 				}),
-				woodLambert	: new THREE.MeshPhongMaterial({
-					color: 0xFFFFFF
+				wood	: new THREE.MeshPhongMaterial({
+					color		: 0xFFFFFF
 				})
 			};
 			var Models 			= {};
 			var Light 			= {};
 			var CameraStates 	= {
 				start: {
-					position	: { x: -250, 		y: -50, 		z: 800 			},
+					position	: { x: 50, 			y: -50,			z: 800 			},
 					rotation	: { x: 0, 			y: 0, 			z: Math.PI / 4 	}
 				},
-				journal: {
-					position	: { x: 585, 		y: -350, 		z: 1000 		},
-					rotation	: { x: Math.PI / 6,	y: 0, 			z: 0 			}
-				},
 				boardSide1: {
-					position	: { x: -300, 		y: -800, 		z: 1200 		},
+					position	: { x: 0, 			y: -800, 		z: 1200 		},
 					rotation	: { x: Math.PI / 6,	y: 0, 			z: 0 			}
 				},
 				boardSide2: {
-					position	: { x: -1100, 		y: 0, 			z: 1200 		},
+					position	: { x: -800, 		y: 0, 			z: 1200 		},
 					rotation	: { x: 0,			y: -Math.PI / 6,z: -Math.PI / 2	}
 				},
 				boardSide3: {
-					position	: { x: -300, 		y: 800, 		z: 1200 		},
+					position	: { x: 0, 			y: 800, 		z: 1200 		},
 					rotation	: { x: -Math.PI / 6,y: 0,			z: -Math.PI		}
 				},
 				boardSide4: {
-					position	: { x: 500, 		y: 0,	 		z: 1200 		},
+					position	: { x: 800, 		y: 0,	 		z: 1200 		},
 					rotation	: { x: 0,			y: Math.PI / 6,	z: -1.5*Math.PI	}
 				}
 			};
 			
 			var Game = {
 				init: function() {
-					Scene = new THREE.Scene();
+					SceneInstance = new THREE.Scene();
 					
-					Camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 1000000 );
-					$.extend( Camera.position, CameraStates.start.position);
-					$.extend( Camera.rotation, CameraStates.start.rotation);
+					/*** CameraInstance ***/					
+					CameraInstance = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 1000000 );
+					$.extend( CameraInstance.position, CameraStates.start.position);
+					$.extend( CameraInstance.rotation, CameraStates.start.rotation);
 					
-					Materials.woodLambert = new THREE.MeshPhongMaterial({
+					/*** MATERIALS ***/
+					Materials.wood = new THREE.MeshPhongMaterial({
 						map: Textures.wood 
 					});
-					
 					Materials.board = new THREE.MeshPhongMaterial({
 						map: Textures.board 
 					});
-					
 					Materials.paper = new THREE.MeshPhongMaterial({
 						map: Textures.paper 
 					});
-					
 					Materials.card = new THREE.MeshPhongMaterial({
 						map: Textures.card
 					});
-					
 					Materials.dice = [];
 					for( var i = 0; i < 6; i++ ) {
 						Materials.dice[ i ] = new THREE.MeshPhongMaterial({
@@ -135,74 +379,54 @@
 						});
 					}
 					
+					/*** OBJECTS ***/
+					/* WORLD PLANE */
 					Objects.worldPlane = new THREE.Mesh( 
 						new THREE.PlaneGeometry(100000, 100000, 1, 1),
 						Materials.whitePhong
 					);
-				
 					Objects.worldPlane.receiveShadow = true;
 					Objects.worldPlane.castShadow = true;
 					
 					Objects.table = new THREE.Mesh(
 						new THREE.CubeGeometry( 2000, 2000, 200 ), 
-						Materials.woodLambert
+						Materials.wood
 					);
-					
 					Objects.table.position.z = 100;
-					
 					Objects.table.castShadow = true;
 					Objects.table.receiveShadow = true;
 					
+					/* GAMEBOARD */
 					Objects.gameBoard = new THREE.Mesh(
 						new THREE.CubeGeometry( 1000, 1000, 10 ), 
 						Materials.board
 					);
-					
-					Objects.gameBoard.position.x = -300;
 					Objects.gameBoard.position.z = 205;
-					
 					Objects.gameBoard.castShadow = true;
 					Objects.gameBoard.receiveShadow = true;
 					
-					Objects.clipBoard = Models.clipBoard;
-					Objects.clipBoard.position.x = 350;
-					Objects.clipBoard.position.y = -250;
-					Objects.clipBoard.position.z = 200;
-					
-					Objects.clipBoard.rotation.x = Math.PI/2;
-					
-					Objects.invisiPlane = new THREE.Mesh(
-						new THREE.PlaneGeometry( 427, 543, 1, 1 ),
-						Materials.whitePhong
-					);
-					
-					Objects.invisiPlane.position.x = 585;
-					Objects.invisiPlane.position.y = 140;
-					Objects.invisiPlane.position.z = 205;
-					
+					/* DICE */
 					Objects.dice = new THREE.Mesh(
 						new THREE.CubeGeometry( 30, 30, 30, 1, 1, 1 ),
 						new THREE.MeshFaceMaterial( Materials.dice )
 					);
-					
 					Objects.dice.position.z = 20;
 					Objects.dice.position.y = -112;
 					Objects.dice.position.x = 112;
-					
 					Objects.dice.castShadow = true;
 					Objects.dice.receiveShadow = true;
 					
-					Objects.invisiPlane2 = new THREE.Mesh(
+					/* LETSROLL PLANE */
+					Objects.letsRollPlane = new THREE.Mesh(
 						new THREE.PlaneGeometry( 150, 150, 1, 1 ),
 						Materials.transparent
 					);
+					Objects.letsRollPlane.position.x = 112;
+					Objects.letsRollPlane.position.y = -112;
+					Objects.letsRollPlane.position.z = 5.1;
+					Objects.letsRollPlane.receiveShadow = true;
 					
-					Objects.invisiPlane2.position.x = 112;
-					Objects.invisiPlane2.position.y = -112;
-					Objects.invisiPlane2.position.z = 5.1;
-					
-					Objects.invisiPlane2.receiveShadow = true;
-					
+					/* CARD STACK */
 					for( var z = 0; z < 50; z++ ) {
 						var c = new THREE.Mesh(
 							new THREE.CubeGeometry( 200, 110, 1 ),
@@ -212,92 +436,91 @@
 						c.position.x = -104;
 						c.position.y = 104;
 						c.rotation.z = ((-1 + (Math.random() * 2)) * (Math.PI / 128)) + Math.PI / 4;
-						
 						Objects.gameBoard.add( c );
-						
 						if( z == 49 )
 							Objects.topCard = c;
 					}
 					
+					/* PIECE */
 					Objects.piece = new THREE.Mesh(
 						new THREE.CubeGeometry( 30, 30, 60 ),
 						Materials.whitePhong
 					);
-					
 					Objects.piece.position.x = 410;
 					Objects.piece.position.y = -420;
 					Objects.piece.position.z = 35;
-					
 					Objects.piece.castShadow = true;
 					Objects.piece.receiveShadow = true;
 					
-					Objects.gameBoard.add( Objects.invisiPlane2 );
-					Objects.gameBoard.add( Objects.dice );
-					Objects.gameBoard.add( Objects.piece );
-					
+					/*** LIGHT ***/
+					/* MAIN LIGHT */
 					Light.mainLight = new THREE.SpotLight(0xFFFFFF, 0.5);
-
 					Light.mainLight.position.z = 3000;
-					
 					Light.mainLight.castShadow = true;
 					Light.mainLight.shadowDarkness = 0.3;
 					//Light.mainLight.shadowCameraVisible = true;
 					
+					/* HELPER LIGHT */
 					Light.helperLight = new THREE.SpotLight(0xFFFFFF, 0.5);
-					
 					Light.helperLight.position.x = 1000;
 					Light.helperLight.position.y = 1000;
 					Light.helperLight.position.z = 1000;
-					
 					Light.helperLight.castShadow = true;
 					Light.helperLight.shadowDarkness = 0.3;
 					
+					/* HELPER LIGHT 2 */
 					Light.helperLight2 = new THREE.SpotLight(0xFFFFFF, 0.5);
-					
 					Light.helperLight2.position.x = -1000;
 					Light.helperLight2.position.y = -1000;
 					Light.helperLight2.position.z = 1000;
-					
 					Light.helperLight2.castShadow = true;
 					Light.helperLight2.shadowDarkness = 0.3;
 					Light.helperLight2.shadowDarkness = 0.3;
 					//Light.helperLight2.shadowCameraVisible = true;
 					
-					//Camera.lookAt( Objects.gameBoard.position );
+					/*** GAMEBOARD CHILDREN ***/
+					Objects.gameBoard.add( Objects.letsRollPlane );
+					Objects.gameBoard.add( Objects.dice );
+					Objects.gameBoard.add( Objects.piece );
 					
-					Scene.add( Objects.worldPlane );
-					Scene.add( Objects.table );
-					Scene.add( Objects.gameBoard );
-					Scene.add( Objects.clipBoard );
-					Scene.add( Objects.invisiPlane );
-					Scene.add( Light.mainLight );
-					Scene.add( Light.helperLight );
-					Scene.add( Light.helperLight2 );
+					/*** SceneInstance CHILDREN ***/
+					SceneInstance.add( Objects.worldPlane );
+					SceneInstance.add( Objects.table );
+					SceneInstance.add( Objects.gameBoard );
+					SceneInstance.add( Objects.clipBoard );
+					SceneInstance.add( Objects.invisiPlane );
+					SceneInstance.add( Light.mainLight );
+					SceneInstance.add( Light.helperLight );
+					SceneInstance.add( Light.helperLight2 );
 					
-					Renderer = new THREE.WebGLRenderer({ antialias: true, precision: "highp" });
-					Renderer.setSize( window.innerWidth, window.innerHeight );
-					Renderer.shadowMapEnabled = true;
-					Renderer.shadowMapSoft = true;
-					Renderer.shadowMapType = THREE.PCFShadowMap;
+					/*** RendererInstance ***/
+					RendererInstance = new THREE.WebGLRenderer({ antialias: true, precision: "highp" });
+					RendererInstance.setSize( window.innerWidth, window.innerHeight );
+					RendererInstance.shadowMapEnabled = true;
+					RendererInstance.shadowMapSoft = true;
+					RendererInstance.shadowMapType = THREE.PCFShadowMap;
+					RendererInstance.shadowCameraFov = 50;
+					RendererInstance.shadowMapWidth = 512;
+					RendererInstance.shadowMapHeight = 512;
 					
-					Renderer.shadowCameraFov = 50;
-					Renderer.shadowMapWidth = 512;
-					Renderer.shadowMapHeight = 512;
-					
-					El = $( Renderer.domElement );
+					El = $( RendererInstance.domElement );
 					$( document.body ).append( El );
 					
-					CameraController = new CameraControllerScaffolding( Camera, CameraStates );
+					/*** INITIALIZE CONTROLLERS ***/
+					CameraControllerInstance 	= new CameraController( CameraInstance, CameraStates );
+					ClipBoardControllerInstance = new ClipBoardController( $(window), $( ".clipBoard" ) );
 				},
-				showPlayerDetails: function() {
-					var screen = Utils.toScreenCoordinates( new THREE.Vector3( -270, -30, 210 ) );
-					PlayerDetails.fadeIn( 1000 );
+				promptPlayerDetails: function() {
+					var screen = Utils.toScreenCoordinates(
+						new THREE.Vector3( 30, -30, 210 )
+					);
 					PlayerDetails.css({
-						left	: screen.x - (PlayerDetails.outerWidth( true ) / 2),
+						left	: screen.x - ( PlayerDetails.outerWidth( true ) / 2 ),
 						top		: screen.y
 					});
+					PlayerDetails.fadeIn( 1000 );
 					PlayerDetails.find( ".name" ).focus();
-					PlayerDetails.find("input[type=button]").click(function() {						
+					PlayerDetails.find( "input[type=button]" ).click(function() {						
 						var sex = $(this).attr("class");
 						var name = PlayerDetails.find(".name").val();
 						if( name === "") {
@@ -306,12 +529,13 @@
 						}
 						Game.setInitialJournalValues( name, sex );
 						PlayerDetails.fadeOut(500, function() {
-							CameraController.go( "journal", 1500, function() {
-								CameraController.go( "boardSide1", 1500, function() {
+							CameraControllerInstance.go( "boardSide1", 1500, function() {
+								ClipBoardControllerInstance.place();
+								ClipBoardControllerInstance.show(function() {
 									GameLock = false;
 									LetsRollController.show();
 								});
-							}, 10000);
+							});
 						});
 					});
 				},
@@ -325,49 +549,38 @@
 					HealthJournal.changed();
 				},
 				start: function() {					
-					DivMapping.setup( Camera, CssOverlay );
-					DivMapping.map( Objects.invisiPlane, CssOverlay.find( ".HealthJournal" ) );
-					DivMapping.map( Objects.invisiPlane2, CssOverlay.find( ".lets " ));
+					DivMapping.setup( CameraInstance, CssOverlay );
+					DivMapping.map( Objects.letsRollPlane, CssOverlay.find( ".lets " ));
 					
 					GameLock = true;
 					
 					CssOverlay.css( "opacity", 1 );
-					CameraController.go( "start", 500 );
+					CameraControllerInstance.go( "start", 500 );
 					
 					Game.animate();
-					
-					Game.showPlayerDetails();
+					Game.promptPlayerDetails();
 				},
-				newTurn: function( eyes ) {
+				turnStart: function( eyes ) {
 					GameLock = true;
 					LetsRollController.hide();
+					ClipBoardControllerInstance.hide();
 					PieceController.move( eyes, function( state ) {
-						var cStateName = "boardSide" + state.camera;
-						if( cStateName !== CameraController.current() )
-							CameraController.go( cStateName, 1000 );
+						var cStateName = "boardSide" + state.CameraInstance;
+						if( cStateName !== CameraControllerInstance.current() )
+							CameraControllerInstance.go( cStateName, 1000 );
 					},
 					function( newPosition, passed ) {
 						BoardController.hit( newPosition, passed, function() {
-							if( HealthJournal.changed() ) {
-								window.setTimeout(function() {
-									CameraController.go( "journal", 1000, function() {
-										CameraController.go ( CameraController.previous(), 1000, function() {
-											GameLock = false;
-											LetsRollController.show();
-										});
-									}, 10000);
-								}, 1000);
-							}
-							else {
-								GameLock = false;
-								LetsRollController.show();
-							}
+							if( HealthJournal.changed() )
+								ClipBoardControllerInstance.show();
+							GameLock = false;
+							LetsRollController.show();
 						});
 					});
 				},
 				animate	: function() {
 					requestAnimationFrame( Game.animate );
-					Renderer.render( Scene, Camera );
+					RendererInstance.render( SceneInstance, CameraInstance );
 					TWEEN.update();
 					DivMapping._update();
 				}
@@ -387,7 +600,7 @@
 				}
 				
 				if( hitDice ) {
-					DiceController.roll( Game.newTurn );
+					DiceController.roll( Game.turnStart );
 				}
 			};
 			
@@ -416,10 +629,10 @@
 					_glObjs		: [],
 					_divs		: [],
 					
-					setup: function( camera, wrapper ) {
-						this._camera = camera;
+					setup: function( CameraInstance, wrapper ) {
+						this._camera = CameraInstance;
 						this._wrapperDiv = wrapper;
-						this._cameraDiv = wrapper.find( ".camera" );
+						this._cameraDiv = wrapper.find( ".CameraInstance" );
 						
 						this._fov = 0.5 / Math.tan(this._camera.fov * Math.PI / 360) * wrapper.height();
 						
@@ -472,8 +685,8 @@
 						return Math.abs( value ) < 0.000001 ? 0 : value;
 					},
 					
-					_getCameraCSSMatrix: function ( camera ) {
-						var elements = camera.matrixWorldInverse.elements;
+					_getCameraCSSMatrix: function ( CameraInstance ) {
+						var elements = CameraInstance.matrixWorldInverse.elements;
 						return 'matrix3d(' +
 							this._epsilon( elements[ 0 ] ) + ',' +
 							this._epsilon( - elements[ 1 ] ) + ',' +
@@ -527,7 +740,7 @@
 			
 			var HealthJournal = (function() {
 				return {
-					_journal			: function() { return $(".HealthJournal"); 				},
+					_journal			: function() { return $(".healthJournal"); 				},
 					_nameTxt			: function() { return this._journal().find(".name");	},
 					_picture			: function() { return this._journal().find(".picture");	},
 					_genderTxt			: function() { return this._journal().find(".gender");	},
@@ -548,7 +761,8 @@
 						if( typeof( c ) !== "undefined" ) {
 							this._changed = c;
 							if( c ) {
-								self.income().set( ((self.age().get() / 100) * (self.mentalHealth().get() / 100) * (self.physicalHealth().get() / 100) * 1000000) + 20000 );
+								var inc = Math.round( ((self.age().get() / 100) * (self.mentalHealth().get() / 100) * (self.physicalHealth().get() / 100) * 1000000) + 20000 );
+								self.income().set( inc );
 								if( self.physicalHealth().get() <= 0 ) {
 									window.location = "http://thekickback.com/rickroll/rickroll.php";
 								}
@@ -706,7 +920,7 @@
 				};
 			})();
 			
-			var CameraControllerScaffolding = function( camera, states ) {
+			var CameraController = function( CameraInstance, states ) {
 				
 				var aCurrentState;
 				var currentState;
@@ -746,7 +960,7 @@
 							prevState = currentState;
 							currentState = state;
 							
-							self.normalize( camera.rotation );
+							self.normalize( CameraInstance.rotation );
 							
 							if( cb ) {
 								if( hold > 0 ) {
@@ -764,14 +978,14 @@
 						var p0 = p.promise();
 						var p1 = p.promise();
 						
-						new TWEEN.Tween( camera.position )
+						new TWEEN.Tween( CameraInstance.position )
 							.to(states[ state ][ "position" ], duration)
 							.easing( TWEEN.Easing.Cubic.InOut )
 							.onComplete( p0 )
 							.start();
 						
-						var rot = this.getRotationVector( camera.rotation, states[ state ][ "rotation" ] );
-						new TWEEN.Tween( camera.rotation )
+						var rot = this.getRotationVector( CameraInstance.rotation, states[ state ][ "rotation" ] );
+						new TWEEN.Tween( CameraInstance.rotation )
 							.to(rot, duration)
 							.easing( TWEEN.Easing.Cubic.InOut )
 							.onComplete( p1 )
@@ -836,7 +1050,7 @@
 					if( t.side === 3 ) { axis = 0; 	direction = 1; 		}
 					if( t.side === 4 ) { axis = 1; 	direction = -1;		}
 					
-					return { axis: axis, direction: direction, size: moveSize, camera: n.side };
+					return { axis: axis, direction: direction, size: moveSize, CameraInstance: n.side };
 				};
 				
 				var generateChain = function( obj, frame, steps, stepCb, doneCb ) {
@@ -896,7 +1110,7 @@
 			
 			var LetsRollController = {
 				show: function() {
-					Objects.invisiPlane2.rotation.z = CameraController.rotation().z;
+					Objects.letsRollPlane.rotation.z = CameraControllerInstance.rotation().z;
 					LetsRoll.fadeIn( 500 );
 				},
 				hide: function() {
@@ -907,10 +1121,10 @@
 			var RiskController = (function() {
 				
 				var risks = {
-					influenza		: { risk: 0, phImpact: 10, mhImpact: 10 },
-					heartAttack		: { risk: 0, phImpact: 50, mhImpact: 50 },
-					stroke			: { risk: 0, phImpact: 50, mhImpact: 50 },
-					breastCancer	: { risk: 0, phImpact: 40, mhImpact: 50 },
+					influenza		: { risk: 0, phImpact: 20, mhImpact: 20 },
+					heartAttack		: { risk: 0, phImpact: 70, mhImpact: 70 },
+					stroke			: { risk: 0, phImpact: 70, mhImpact: 70 },
+					breastCancer	: { risk: 0, phImpact: 70, mhImpact: 70 },
 					cysticFibrosis	: { risk: 0, phImpact: 30, mhImpact: 20 },
 					lplu			: { risk: 0, phImpact: 20, mhImpact: 20 }
 				};
@@ -948,83 +1162,83 @@
 				};
 			})();
 			
-			var BoardStates = [
-				{ // 1 
-					type: "start"
-				},
-				{ // 2
-					type: "free" 
-				},
-				{ // 3
-					type: "free" 
-				},
-				{ // 4
-					type: "free" 
-				},
-				{ // 5
-					type: "sickness" 
-				},
-				{ // 6
-					type: "exercise" 
-				},
-				{ // 7
-					type: "seq" 
-				},
-				{ // 8
-					type: "free" 
-				},
-				{ // 9
-					type: "free" 
-				},
-				{ // 10
-					type: "free" 
-				},
-				{ // 11
-					type: "sickness" 
-				},
-				{ // 12
-					type: "exercise" 
-				},
-				{ // 13
-					type: "seq" 
-				},
-				{ // 14
-					type: "free" 
-				},
-				{ // 15
-					type: "free" 
-				},
-				{ // 16
-					type: "free" 
-				},
-				{ // 17
-					type: "sickness" 
-				},
-				{ // 18
-					type: "exercise" 
-				},
-				{ // 19
-					type: "seq" 
-				},
-				{ // 20
-					type: "free" 
-				},
-				{ // 21
-					type: "free" 
-				},
-				{ // 22
-					type: "free" 
-				},
-				{ // 23
-					type: "sickness" 
-				},
-				{ // 24
-					type: "exercise" 
-				}
-			];
-			
 			var BoardController = (function() {
 				RiskController.generate();
+				
+				var boardStates = [
+					{ // 1 
+						type: "start"
+					},
+					{ // 2
+						type: "free" 
+					},
+					{ // 3
+						type: "free" 
+					},
+					{ // 4
+						type: "free" 
+					},
+					{ // 5
+						type: "sickness" 
+					},
+					{ // 6
+						type: "exercise" 
+					},
+					{ // 7
+						type: "seq" 
+					},
+					{ // 8
+						type: "free" 
+					},
+					{ // 9
+						type: "free" 
+					},
+					{ // 10
+						type: "free" 
+					},
+					{ // 11
+						type: "sickness" 
+					},
+					{ // 12
+						type: "exercise" 
+					},
+					{ // 13
+						type: "seq" 
+					},
+					{ // 14
+						type: "free" 
+					},
+					{ // 15
+						type: "free" 
+					},
+					{ // 16
+						type: "free" 
+					},
+					{ // 17
+						type: "sickness" 
+					},
+					{ // 18
+						type: "exercise" 
+					},
+					{ // 19
+						type: "seq" 
+					},
+					{ // 20
+						type: "free" 
+					},
+					{ // 21
+						type: "free" 
+					},
+					{ // 22
+						type: "free" 
+					},
+					{ // 23
+						type: "sickness" 
+					},
+					{ // 24
+						type: "exercise" 
+					}
+				];
 				
 				return {
 					hit: function( frame, passed, doneCb ) {
@@ -1034,9 +1248,9 @@
 							HealthJournal.age().set( HealthJournal.age().get() + 4 );
 						}
 						
-						var state = BoardStates[ frame-1 ];
+						var state = boardStates[ frame-1 ];
 						if( state.type === "seq" ) {
-							var risks = RiskController.get();
+							var r = RiskController.getRandom();
 							
 							HealthJournal.risks().set( r.sickness, Math.round(r.risk * 100) );
 							if( r.risk > 0.05 ) {
@@ -1062,13 +1276,45 @@
 				};
 			})();
 			
-			var CardController = (function() {
+			var CardController = function() {
 				return {
 					draw: function() {
 						
 					}
 				};
-			})();
+			};
+			
+			var ClipBoardController = function( container, clipBoard ) {
+				return {
+					place: function() {
+						clipBoard.css({
+							top: 		(container.height() / 2) -
+										(clipBoard.outerHeight( true ) / 2),
+							opacity:	1
+						});
+					},
+					show: function( cb ) {
+						clipBoard.animate({
+							left: "-20px"
+						},
+						{
+							complete: function() {
+								if( cb ) cb();
+							}
+						});
+					},
+					hide: function( cb ) {
+						clipBoard.animate({
+							left: "-311px"
+						},
+						{
+							complete: function() {
+								if( cb ) cb();
+							}
+						});
+					}
+				};
+			};
 			
 			$(function() {
 				var p = new Parallel(function() {
@@ -1078,8 +1324,7 @@
 				
 				var p0 = p.promise();
 				var p1 = p.promise();
-				var p3 = p.promise();
-				var p4 = p.promise();
+				var p2 = p.promise();
 				
 				CssOverlay = $( "#wrapper" );
 				CssOverlay.css({
@@ -1106,7 +1351,7 @@
 				Textures.board.repeat.set(1, 1);
 				Textures.board.needsUpdate = true;
 				
-				Textures.card = THREE.ImageUtils.loadTexture("tex/card.png", {}, p4);
+				Textures.card = THREE.ImageUtils.loadTexture("tex/card.png", {}, p2);
 				Textures.card.wrapS = THREE.RepeatWrapping;
 				Textures.card.wrapT = THREE.RepeatWrapping;
 				Textures.card.repeat.set(1, 1);
@@ -1118,25 +1363,15 @@
 					Textures.dice[ i ] = THREE.ImageUtils.loadTexture("tex/dice" + (i+1) + ".png", {}, cb);
 				}
 				
-				var loader = new THREE.ColladaLoader();
-				loader.options.convertUpAxis = true;
-				loader.load("clipboard.dae", function ( collada ) {
-					dae = collada.scene;
-					dae.scale.x = dae.scale.y = dae.scale.z = 50.0;
-					Utils.recursivelyEnableShadowForCollada(dae.children);
-					
-					Models.clipBoard = dae;
-					p3();
-				});
-				
 				$(window).resize(function() {
-					Renderer.setSize( $(window).width(), $(window).height() );
-					Camera.aspect = $(window).width() / $(window).height();
-					Camera.updateProjectionMatrix();
-					DivMapping.setup( Camera, CssOverlay );
-					if( PlayerDetails.is(":visible") ) {
-						Game.showPlayerDetails();
-					}
+					RendererInstance.setSize( $(window).width(), $(window).height() );
+					CameraInstance.aspect = $(window).width() / $(window).height();
+					CameraInstance.updateProjectionMatrix();
+					DivMapping.setup( CameraInstance, CssOverlay );
+					ClipBoardControllerInstance.place();
+					if( PlayerDetails.is(":visible") )
+						Game.promptPlayerDetails();
+					
 					CssOverlay.css({
 						width	: $(window).width(),
 						height	: $(window).height()
@@ -1146,239 +1381,6 @@
 				document.addEventListener( "mousedown", onDocumentMouseDown, false );
 			});
 		</script>
-		<style>
-			#playerDetails {
-				position: absolute;
-				z-index: 200;
-				float: left;
-				clear: both;
-			}
-			
-			#playerDetails .name {
-				text-transform: uppercase;
-				font-family: Open Sans;
-				font-weight: 300;
-				font-size: 16px;
-				padding: 5px;
-				text-align: center;
-				border-radius: 5px;
-				margin-bottom: 10px;
-			}
-			
-			#playerDetails input[type=button] {
-				text-transform: uppercase;
-				font-family: Open Sans;
-				font-weight: 300;
-				font-size: 16px;
-				padding: 5px;
-				text-align: center;
-				border-radius: 5px;
-				background-color: #C60202;
-				color: #fff;
-			}
-			
-			#playerDetails p {
-				text-align: center;
-			}
-			
-			#playerDetails .sex {
-				background: #f00;
-				display: block;
-			}
-			
-			#wrapper {
-				-webkit-transform-style: preserve-3d; 
-				-webkit-perspective-origin: 50% 50%;
-			}
-			
-			html:-webkit-full-screen {}
-			
-			.camera {
-				-webkit-transform-style: preserve-3d;
-				-webkit-transform-origin: 50% 50%;
-			}
-			
-			.HealthJournal {
-				width: 430px; 
-				height: 543px;
-				padding: 40px;
-				position: absolute; 
-				-webkit-transform-style: preserve-3d;
-				-webkit-transform-origin: 50% 50%;
-				-webkit-backface-visibility: hidden;
-				padding-top: 75px;
-				clear: both;
-			}
-			
-			.lets {
-				width: 150px; 
-				height: 150px;
-				position: absolute; 
-				-webkit-transform-style: preserve-3d;
-				-webkit-transform-origin: 50% 50%;
-				-webkit-backface-visibility: hidden;
-				clear: both;
-				background: url(tex/lets.png) no-repeat;
-				background-size: cover;
-			}
-			
-			.header {
-				float: left;
-				clear: both;
-				margin-bottom: 20px;
-			}
-			
-			.colorBar {
-				height: 80px;
-				width: 10px;
-				background: #f00;
-				margin-right: 20px;
-				float: left;
-			}
-			
-			.headerText {
-				float: left;
-			}
-			
-			h1 {
-				font-family: Open Sans;
-				font-weight: 300;
-				margin: 0;
-			}
-			
-			h2 {
-				font-family: Open Sans;
-				font-weight: 600;
-				text-transform: uppercase;
-				margin: 0;
-			}
-			
-			.picture {
-				width: 128px;
-				height: 128px;
-				float: left;
-				margin-right: 20px;
-			}
-			
-			.bio {
-				float: left;
-				clear: both;
-				margin-bottom: 20px;
-			}
-			
-			.bioInfo {
-				float: left;
-			}
-			
-			.bioInfo .line {
-				float: left;
-				clear: both;
-			}
-			
-			.bioInfo .key {
-				font-family: Open Sans;
-				font-weight: 600;
-				float: left;
-				width: 100px;
-			}
-			
-			.bioInfo .val {
-				font-family: Open Sans;
-				font-weight: 300;
-				float: left;
-			}
-			
-			.health {
-				float: left;
-				clear: both;
-				margin-bottom: 20px;
-			}
-			
-			.health .line {
-				margin-bottom: 10px;
-				float: left;
-				clear: both;
-			}
-			
-			.health .key {
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 20px;
-				float: left;
-				clear: both;
-			}
-			
-			.health .val {
-				font-family: Open Sans;
-				font-weight: 300;
-				float: left;
-				clear: both;
-			}
-			
-			.progressBar {
-				width: 427px;
-				height: 15px;
-				border: 1px solid #333;
-				float: left;
-				clear: both;
-			}
-			
-			.progressBar .bar {
-				width: 10%;
-				height: 100%;
-				background: #f00;
-			}
-			
-			.progressBar .perc {
-				width: 427px;
-				text-align: center;
-				position: absolute;
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 11px;
-			}
-			
-			.risks {
-				float: left;
-				clear: both;
-			}
-			
-			.risks .key {
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 20px;
-				float: left;
-				clear: both;
-			}
-			
-			.risks .diseases {
-				font-family: Open Sans;
-				font-weight: 300;
-				float: left;
-				clear: both;
-			}
-			
-			.risks .d {
-				float: left;
-				margin-right: 5px;
-			}
-			
-			.risks .d .key {
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 12px;
-				float: left;
-				clear: both;
-			}
-			
-			.risks .d .progressBar {
-				width: 100px !important;
-			}
-			
-			.risks .d .progressBar .perc {
-				width: 100px !important;
-			}
-		</style>
 		<div id="playerDetails">
 			<p>
 				<input type="text" value="" class="name" placeholder="navn"/>
@@ -1390,64 +1392,68 @@
 				</span>
 			</p>
 		</div>
-		<div id="wrapper">
-			<div class="camera">
-				<div class="object lets">
+		
+		<div class="clipBoard">
+			<div class="healthJournal">
+				<div class="header">
+					<div class="colorBar"></div>
+					<div class="headerText">
+						<h1>helsejournal</h1>
+						<h2 class="name">THOMAS ANDRESEN</h2>
+					</div>
 				</div>
-				<div class="object HealthJournal">
-					<div class="header">
-						<div class="colorBar"></div>
-						<div class="headerText">
-							<h1>helsejournal</h1>
-							<h2 class="name">THOMAS ANDRESEN</h2>
-						</div>
-					</div>
-					<div class="bio">
-						<img class="picture" />
-						<div class="bioInfo">
-							<div class="line">
-								<p class="key">KJØNN</p>
-								<p class="val gender">mann</p>
-							</div>
-							<div class="line">
-								<p class="key">ALDER</p>
-								<p class="val age">25</p>
-							</div>
-							<div class="line">
-								<p class="key">INNTEKT</p>
-								<p class="val income">0</p>
-							</div>
-							<div class="line">
-								<p class="key">FORMUE</p>
-								<p class="val balance">0</p>
-							</div>
-						</div>
-					</div>
-					<div class="health">
+				<div class="bio">
+					<img class="picture" />
+					<div class="bioInfo">
 						<div class="line">
-							<p class="key">FYSISK HELSE</p>
-							<p class="val">
-								<div class="progressBar physical">
-									<div class="perc">10%</div>
-									<div class="bar"></div>
-								</div>
-							</p>
+							<p class="key">KJØNN</p>
+							<p class="val gender">mann</p>
 						</div>
 						<div class="line">
-							<p class="key">MENTAL HELSE</p>
-							<p class="val">
-								<div class="progressBar mental">
-									<div class="perc">10%</div>
-									<div class="bar"></div>
-								</div>
-							</p>
+							<p class="key">ALDER</p>
+							<p class="val age">25</p>
+						</div>
+						<div class="line">
+							<p class="key">INNTEKT</p>
+							<p class="val income">0</p>
+						</div>
+						<div class="line">
+							<p class="key">FORMUE</p>
+							<p class="val balance">0</p>
 						</div>
 					</div>
-					<div class="risks">
-						<p class="key">KARTLAGTE RISIKOER</p>
-						<div class="diseases">
+				</div>
+				<div class="health">
+					<div class="line">
+						<p class="key">FYSISK HELSE</p>
+						<p class="val">
+							<div class="progressBar physical">
+								<div class="perc">10%</div>
+								<div class="bar"></div>
+							</div>
 						</p>
 					</div>
+					<div class="line">
+						<p class="key">MENTAL HELSE</p>
+						<p class="val">
+							<div class="progressBar mental">
+								<div class="perc">10%</div>
+								<div class="bar"></div>
+							</div>
+						</p>
+					</div>
+				</div>
+				<div class="risks">
+					<p class="key">KARTLAGTE RISIKOER</p>
+					<div class="diseases">
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		<div id="wrapper">
+			<div class="CameraInstance">
+				<div class="object lets">
 				</div>
 			</div>
 		</div>
