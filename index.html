@@ -16,14 +16,14 @@
 				overflow: hidden;
 			}
 			
-			#playerDetails {
+			.playerDetails {
 				position: absolute;
 				z-index: 200;
 				float: left;
 				clear: both;
 			}
 			
-			#playerDetails .name {
+			.playerDetails .name {
 				text-transform: uppercase;
 				font-family: Open Sans;
 				font-weight: 300;
@@ -34,7 +34,7 @@
 				margin-bottom: 10px;
 			}
 			
-			#playerDetails input[type=button] {
+			.playerDetails input[type=button] {
 				text-transform: uppercase;
 				font-family: Open Sans;
 				font-weight: 300;
@@ -46,11 +46,11 @@
 				color: #fff;
 			}
 			
-			#playerDetails p {
+			.playerDetails p {
 				text-align: center;
 			}
 			
-			#playerDetails .sex {
+			.playerDetails .sex {
 				background: #f00;
 				display: block;
 			}
@@ -238,11 +238,11 @@
 			}
 			
 			.risks .d .progressBar {
-				width: 100px !important;
+				width: 50px !important;
 			}
 			
 			.risks .d .progressBar .perc {
-				width: 100px !important;
+				width: 50px !important;
 			}
 		</style>
 	</head>
@@ -267,7 +267,7 @@
 					var vector = new THREE.Vector3( (e.clientX / window.innerWidth) * 2 - 1,  -(e.clientY / window.innerHeight) * 2 + 1, 0.5 );
 					projector.unprojectVector( vector, CameraInstance);
 					
-					var ray = new THREE.Raycaster( CameraInstance.position, vector.subSelf( CameraInstance.position ).normalize() );
+					var ray = new THREE.Raycaster( CameraInstance.position, vector.sub( CameraInstance.position ).normalize() );
 					var intersects = ray.intersectObjects( $.map(Objects, function(val, key) { return val; }), true );
 					
 					return intersects;
@@ -290,13 +290,16 @@
 			var CameraInstance, 
 				SceneInstance, 
 				RendererInstance, 
-				El,
-				PlayerDetails, 
 				CameraControllerInstance,
+				PlayerDetailsControllerInstance,
+				ClipBoardControllerInstance, 
+				LetsRollControllerInstance,
 				ClipBoardControllerInstance,
-				GameLock, 
-				LetsRoll,
-				DivMapperInstance;
+				BoardControllerInstance,
+				DivMapperInstance,
+				GameLock;
+			
+			var _AUTOPLAY_ = true;
 			
 			var Objects 		= {};
 			var Textures 		= {};
@@ -491,50 +494,50 @@
 					RendererInstance.shadowMapWidth = 512;
 					RendererInstance.shadowMapHeight = 512;
 					
-					El = $( RendererInstance.domElement );
-					$( document.body ).append( El );
+					$( document.body ).append( $( RendererInstance.domElement ) );
 					
 					/*** INITIALIZE CONTROLLERS ***/
-					CameraControllerInstance 	= new CameraController( CameraInstance, CameraStates );
-					ClipBoardControllerInstance = new ClipBoardController( $(window), $( ".clipBoard" ) );
+					CameraControllerInstance 		= new CameraController( CameraInstance, CameraStates );
+					ClipBoardControllerInstance 	= new ClipBoardController( $(window), $( ".clipBoard" ) );
+					LetsRollControllerInstance		= new LetsRollController( $( ".letsRoll" ), Objects.letsRollPlane );
+					DiceControllerInstance 			= new DiceController( Objects.dice );
+					PieceControllerInstance			= new PieceController( Objects.piece );
+					RiskControllerInstance			= new RiskController();
+					PlayerDetailsControllerInstance	= new PlayerDetailsController( $( ".playerDetails" ), new THREE.Vector3( 30, -30, 210 ) );
+					BoardControllerInstance			= new BoardController();
+					HealthJournalControllerInstance	= new HealthJournalController( $( ".healthJournal" ) );
 				},
 				promptPlayerDetails: function() {
-					var screen = Utils.toScreenCoordinates(
-						new THREE.Vector3( 30, -30, 210 )
-					);
-					PlayerDetails.css({
-						left	: screen.x - ( PlayerDetails.outerWidth( true ) / 2 ),
-						top		: screen.y
-					});
-					PlayerDetails.fadeIn( 1000 );
-					PlayerDetails.find( ".name" ).focus();
-					PlayerDetails.find( "input[type=button]" ).click(function() {						
-						var sex = $(this).attr("class");
-						var name = PlayerDetails.find(".name").val();
-						if( name === "") {
-							alert( "Vennligst tast inn et navn." );
-							return;
-						}
-						Game.setInitialJournalValues( name, sex );
-						PlayerDetails.fadeOut(500, function() {
-							CameraControllerInstance.go( "boardSide1", 1500, function() {
-								ClipBoardControllerInstance.place();
-								ClipBoardControllerInstance.show(function() {
-									GameLock = false;
-									LetsRollController.show();
+					PlayerDetailsControllerInstance.show(function() {
+						var el = PlayerDetailsControllerInstance.el();
+						el.find( ".name" ).focus();
+						el.find( "input[type=button]" ).click(function() {						
+							var sex = $(this).attr("class");
+							var name = el.find(".name").val();
+							if( name === "") {
+								alert( "Vennligst tast inn et navn." );
+								return;
+							}
+							Game.setInitialJournalValues( name, sex );
+							el.fadeOut(500, function() {
+								CameraControllerInstance.go( "boardSide1", 1500, function() {
+									ClipBoardControllerInstance.show(function() {
+										GameLock = false;
+										LetsRollControllerInstance.show( CameraControllerInstance.rotation().z );
+									});
 								});
 							});
 						});
 					});
 				},
 				setInitialJournalValues: function( name, gender ) {
-					HealthJournal.name().set( name.toUpperCase() );
-					HealthJournal.gender().set( gender );
-					HealthJournal.age().set( 0 );
-					HealthJournal.balance().set( 20000 );
-					HealthJournal.physicalHealth().set( 100 );
-					HealthJournal.mentalHealth().set( 100 );
-					HealthJournal.changed();
+					HealthJournalControllerInstance.name( name.toUpperCase() );
+					HealthJournalControllerInstance.gender( gender );
+					HealthJournalControllerInstance.age( 0 );
+					HealthJournalControllerInstance.balance( 20000 );
+					HealthJournalControllerInstance.physicalHealth( 100 );
+					HealthJournalControllerInstance.mentalHealth( 100 );
+					HealthJournalControllerInstance.changed();
 				},
 				start: function() {					
 					DivMapperInstance = new THREE.DivMapper( CameraInstance, $(document.body) );					
@@ -550,19 +553,21 @@
 				},
 				turnStart: function( eyes ) {
 					GameLock = true;
-					LetsRollController.hide();
+					LetsRollControllerInstance.hide();
 					ClipBoardControllerInstance.hide();
-					PieceController.move( eyes, function( state ) {
+					PieceControllerInstance.move( eyes, function( state ) {
 						var cStateName = "boardSide" + state.CameraInstance;
 						if( cStateName !== CameraControllerInstance.current() )
 							CameraControllerInstance.go( cStateName, 1000 );
 					},
 					function( newPosition, passed ) {
-						BoardController.hit( newPosition, passed, function() {
-							if( HealthJournal.changed() )
+						BoardControllerInstance.hit( newPosition, passed, function() {
+							if( HealthJournalControllerInstance.changed() )
 								ClipBoardControllerInstance.show();
 							GameLock = false;
-							LetsRollController.show();
+							LetsRollControllerInstance.show( CameraControllerInstance.rotation().z );
+							if( _AUTOPLAY_ )
+								window.setTimeout( function() { DiceControllerInstance.roll( Game.turnStart ); }, 2000 );
 						});
 					});
 				},
@@ -588,7 +593,7 @@
 				}
 				
 				if( hitDice ) {
-					DiceController.roll( Game.turnStart );
+					DiceControllerInstance.roll( Game.turnStart );
 				}
 			};
 			
@@ -608,263 +613,237 @@
 				};
 			};
 			
-			var HealthJournal = (function() {
-				return {
-					_journal			: function() { return $(".healthJournal"); 				},
-					_nameTxt			: function() { return this._journal().find(".name");	},
-					_picture			: function() { return this._journal().find(".picture");	},
-					_genderTxt			: function() { return this._journal().find(".gender");	},
-					_ageTxt				: function() { return this._journal().find(".age");		},
-					_balanceTxt			: function() { return this._journal().find(".balance");	},
-					_incomeTxt			: function() { return this._journal().find(".income");	},
-					_physicalPrg		: function() { return this._journal().find(".physical");},
-					_mentalPrg			: function() { return this._journal().find(".mental");	},
-					_diseasesBx			: function() { return this._journal().find(".diseases");},
-					
-					_diseases			: {},
-					_dJq				: $("<div class=\"d\"><p class=\"key\">ALS</p><p class=\"val\"><div class=\"progressBar\"><div class=\"perc\">30%</div><div class=\"bar\"></div></div></p></div>"),
-					
-					_changed: false,
-					
-					changed: function( c ) {
-						var self = this;
-						if( typeof( c ) !== "undefined" ) {
-							this._changed = c;
-							if( c ) {
-								var inc = Math.round( ((self.age().get() / 100) * (self.mentalHealth().get() / 100) * (self.physicalHealth().get() / 100) * 1000000) + 20000 );
-								self.income().set( inc );
-								if( self.physicalHealth().get() <= 0 ) {
-									window.location = "http://thekickback.com/rickroll/rickroll.php";
-								}
-							}
-						}
-						else {
-							var b = this._changed;
-							this._changed = false;
-							return b;
-						}
-					},
-					
-					name: function( ) {
-						var self = this;
-						return {
-							get: function() {
-								return self._nameTxt().text();
-							},
-							set: function( name ) {
-								self.changed( true );
-								self._nameTxt().text( name );
-							}
-						};
-					},
-					
-					picture: function( ) {
-						var self = this;
-						return {
-							set: function( url ) {
-								self.changed( true );
-								self._picture().attr( "src", url );
-							}
-						};
-					},
-					
-					gender: function( ) {
-						var self = this;
-						return {
-							get: function() {
-								return self._genderTxt().text() === "mann" ? "male" : "female";
-							},
-							set: function( gender ) {
-								self.changed( true );
-								self._genderTxt().text( (gender === "male" ? "mann" : "kvinne") );
-							}
-						};
-					},
-					
-					age: function( ) {
-						var self = this;
-						return {
-							get: function() {
-								return parseInt( self._ageTxt().text() );
-							},
-							set: function( age ) {
-								self.changed( true );
-								self._ageTxt().text( age );
-							}
-						};
-					},
-					
-					balance: function( ) {
-						var self = this;
-						return {
-							get: function() {
-								return parseInt( self._balanceTxt().text() );
-							},
-							set: function( balance ) {
-								self.changed( true );
-								self._balanceTxt().text( balance );
-							}
-						};
-					},
-					
-					income: function( ) {
-						var self = this;
-						return {
-							get: function() {
-								return parseInt( self._incomeTxt().text() );
-							},
-							set: function( income ) {
-								self._incomeTxt().text( income );
-							}
-						};
-					},
-					
-					physicalHealth: function( ) {
-						var self = this;
-						return {
-							get: function() {
-								return parseInt( self._physicalPrg().find( ".perc" ).text().replace( "%", "" ) );
-							},
-							set: function( h ) {
-								if( h > 100 ) h = 100;
-								if( h < 0 ) h = 0;
-								self.changed( true );
-								self._physicalPrg().find( ".bar" ).css( "width", h + "%" );
-								self._physicalPrg().find( ".perc" ).text( h + "%" );
-								self._updatePicture( h, self.mentalHealth().get() );
-							}
-						};
-					},
-					
-					mentalHealth: function( ) {
-						var self = this;
-						return {
-							get: function() {
-								return parseInt( self._mentalPrg().find( ".perc" ).text().replace( "%", "" ) );
-							},
-							set: function( h ) {
-								if( h > 100 ) h = 100;
-								if( h < 0 ) h = 0;
-								self.changed( true );
-								self._mentalPrg().find( ".bar" ).css( "width", h + "%" );
-								self._mentalPrg().find( ".perc" ).text( h + "%" );
-								self._updatePicture( self.physicalHealth().get(), h );
-							}
-						};
-					},
-					
-					_updatePicture: function( p, m ) {
-						var self = this;
-						var state = ( p + m ) > 100 ? "good" : "bad";
-						var gender = this.gender().get();
-						if( this.name().get().toLowerCase().indexOf("chuck") != -1 ) {
-							this.picture().set( "img/chuck.jpg" );
-						}
-						else if( this.name().get().toLowerCase().indexOf("eivind") != -1 ) {
-							this.picture().set( "img/eivind.jpg" );
-						}
-						else {
-							this.picture().set( "img/" + gender + "_" + state + ".jpg" );
-						}
-						self.changed( true );
-					},
-					
-					risks: function() {
-						var self = this;
-						return {
-							get: function( d ) {
-								return parseInt( self._diseases[ d ].find( ".perc" ).text().replace( "%", "" ) )
-							},
-							set: function( d, p ) {
-								if( !self._diseases[ d ] ) {
-									self._diseases[ d ] = self._dJq.clone();
-									self._diseases[ d ].find( ".key" ).text( d );
-									self._diseasesBx().append( self._diseases[ d ] );
-								}
-								self._diseases[ d ].find( ".bar" ).css( "width", p + "%" );
-								self._diseases[ d ].find( ".perc" ).text( p + "%" );
-								self.changed( true );
-							}
-						};
+			var HealthJournalController = function( journal ) {
+				
+				var	elements = {
+					name		: journal.find( ".name" ),
+					pic			: journal.find( ".picture" ),
+					gender		: journal.find( ".gender" ),
+					age			: journal.find( ".age" ),
+					balance		: journal.find( ".balance" ),
+					income		: journal.find( ".income" ),
+					physical	: journal.find( ".physical" ),
+					mental		: journal.find( ".mental" ),
+					diseases	: journal.find( ".diseases" )
+				};
+				
+				var jqRisk = $("<div class=\"d\"><p class=\"key\"></p><p class=\"val\"><div class=\"progressBar\"><div class=\"perc\"></div><div class=\"bar\"></div></div></p></div>");
+				
+				var risks = {};
+				
+				var _changed = false;
+				var changed = function( c ) {
+					if( typeof( c ) === "undefined" ) {
+						c = _changed;
+						_changed = false;
+						return c;
+					}
+					else {
+						update();
+						_changed = c;
 					}
 				};
-			})();
+				
+				var update = function() {
+					updatePicture();
+					income( Math.round( ( ( age() / 100 ) * ( mentalHealth() / 100 ) * ( physicalHealth() / 100 ) * 1000000 ) ) + 20000 );
+				};
+				
+				var get = function( el ) {
+					return elements[ el ].text();
+				};
+				
+				var set = function( el, val, silent ) {
+					elements[ el ].text( val );
+					if( !silent ) changed( true );
+				};
+				
+				var picture = function( url ) {
+					elements[ "pic" ].attr( "src", url );
+				};
+				
+				var updatePicture = function() {
+					var state = ( physicalHealth() + mentalHealth() ) > 100 ? "good" : "bad";
+					if( name().toLowerCase().indexOf("chuck") != -1 ) {
+						picture( "img/chuck.jpg" );
+					}
+					else if( name().toLowerCase().indexOf("eivind") != -1 ) {
+						picture( "img/eivind.jpg" );
+					}
+					else {
+						picture( "img/" + gender() + "_" + state + ".jpg" );
+					}
+				};
+				
+				var progressBar = function( el, val ) {
+					var bar 	= el.find( ".bar" );
+					var text 	= el.find( ".perc" );
+					if( typeof( val ) !== "undefined" ) {
+						val = Math.round( val );
+						if( val > 100 ) val = 100;
+						if( val < 0 )	val = 0;
+						bar.css( "width", val + "%" );
+						text.text( val + "%" );
+						changed( true );
+					}
+					else {
+						return parseInt( text.text().replace("%", "") );
+					}
+				};
+				
+				var name = function( val ) {
+					if( typeof( val ) !== "undefined" ) 	set( "name", val );
+					else 		return get( "name" );
+				};
+				
+				var gender = function( val ) {
+					if( typeof( val ) !== "undefined" )	set( "gender", val === "male" ? "mann" : "kvinne" );
+					else		return get( "gender" ) === "mann" ? "male" : "female";
+				};
+				
+				var age = function( val, rel ) {
+					if( typeof( val ) !== "undefined" )	set( "age", rel ? ( +get( "age" ) + val ) : val );
+					else 		return parseInt( get( "age" ) );
+				};
+				
+				var balance = function( val, rel ) {
+					if( typeof( val ) !== "undefined" )	set( "balance", rel ? ( +get( "balance" ) + val ) : Math.round( val ) );
+					else 		return parseInt( get( "balance" ) );
+				};
+				
+				var income = function( val ) {
+					if( typeof( val ) !== "undefined" )	set( "income", Math.round( val ), true );
+					else 		return parseInt( get( "income" ) );
+				};
+				
+				var physicalHealth = function( val, rel ) {
+					if( typeof( val ) !== "undefined" )	progressBar( elements[ "physical" ], rel ? ( +progressBar( elements[ "physical" ] ) + val ) : val );
+					else 		return progressBar( elements[ "physical" ] );
+				};
+				
+				var mentalHealth = function( val, rel ) {
+					if( typeof( val ) !== "undefined" )	progressBar( elements[ "mental" ], rel ? ( +progressBar( elements[ "mental" ] ) + val ) : val );
+					else 		return progressBar( elements[ "mental" ] );
+				};
+				
+				var risk = function( d, val ) {
+					var key;
+					if( typeof( val ) !== "undefined" ) {
+						if( !risks[ d ] ) {
+							risks[ d ] = jqRisk.clone().appendTo( elements[ "diseases" ] );
+							risks[ d ].find( ".key" ).text( d );
+						}
+						progressBar( risks[ d ].find( ".progressBar" ), val );
+					}
+					else {
+						return risks[ d ] ? progressBar( risks[ d ].find( ".progressBar" ) ) : 0;
+					}
+				};
+				
+				var pay = function( val ) {
+					if( balance() < val ) {
+						return false;
+					}
+					else {
+						balance( -val, true );
+						return true;
+					}
+				};
+				
+				var birthday = function() {
+					age( 4, true );
+					balance( income(), true );
+				};
+				
+				return {
+					name			: name,
+					gender			: gender,
+					age				: age,
+					balance			: balance,
+					income			: income,
+					physicalHealth	: physicalHealth,
+					mentalHealth	: mentalHealth,
+					risk			: risk,
+					pay				: pay,
+					birthday		: birthday,
+					changed			: changed
+				};
+				
+			};
 			
-			var CameraController = function( CameraInstance, states ) {
+			var CameraController = function( camera, states ) {
 				
 				var aCurrentState;
 				var currentState;
 				var prevState;
 				var aPrevState;
 				
-				return {
-					getOptimalBeta: function( alpha, beta ) {
-						var d0 	= beta - alpha;
-						var d1 	= (-2 * Math.PI + beta) - alpha;						
-						return Math.abs( d0 ) > Math.abs( d1 ) ? (alpha + d1) : (alpha + d0);
-					},
-					getRotationVector: function( aVec, bVec ) {
-						var vec = { x: 0, y: 0, z: 0 };
-						for( var k in vec ) vec[ k ] = this.getOptimalBeta( aVec[ k ], bVec[ k ] );
-						return vec;
-					},
-					normalize: function( vec ) {
-						vec.x = vec.x % (2*Math.PI);
-						vec.y = vec.y % (2*Math.PI);
-						vec.z = vec.z % (2*Math.PI);
-					},
-					current: function() {
-						return aCurrentState;
-					},
-					previous: function() {
-						return aPrevState;
-					},
-					rotation: function() {
-						return states[ aCurrentState ].rotation;
-					},
-					go: function( state, duration, cb, hold ) {
-						var self = this;
-						var p = new Parallel(function() {
-							aPrevState = currentState;
-							aCurrentState = state;
-							prevState = currentState;
-							currentState = state;
-							
-							self.normalize( CameraInstance.rotation );
-							
-							if( cb ) {
-								if( hold > 0 ) {
-									window.setTimeout( cb, hold );
-								}
-								else {
-									cb();
-								}
-							}
-						});
-						
+				var getOptimalBeta = function( alpha, beta ) {
+					var d0 	= beta - alpha;
+					var d1 	= (-2 * Math.PI + beta) - alpha;						
+					return Math.abs( d0 ) > Math.abs( d1 ) ? (alpha + d1) : (alpha + d0);
+				};
+				
+				var getRotationVector = function( a, b ) {
+					var vec = { x: 0, y: 0, z: 0 };
+					for( var k in vec ) vec[ k ] = getOptimalBeta( a[ k ], b[ k ] );
+					return vec;
+				};
+				
+				var normalize = function( vec ) {
+					vec.x = vec.x % (2*Math.PI);
+					vec.y = vec.y % (2*Math.PI);
+					vec.z = vec.z % (2*Math.PI);
+				};
+				
+				var go = function( state, duration, cb, hold ) {
+					var p = new Parallel(function() {
 						aPrevState = currentState;
 						aCurrentState = state;
+						prevState = currentState;
+						currentState = state;
 						
-						var p0 = p.promise();
-						var p1 = p.promise();
+						normalize( camera.rotation );
 						
-						new TWEEN.Tween( CameraInstance.position )
-							.to(states[ state ][ "position" ], duration)
-							.easing( TWEEN.Easing.Cubic.InOut )
-							.onComplete( p0 )
-							.start();
-						
-						var rot = this.getRotationVector( CameraInstance.rotation, states[ state ][ "rotation" ] );
-						new TWEEN.Tween( CameraInstance.rotation )
-							.to(rot, duration)
-							.easing( TWEEN.Easing.Cubic.InOut )
-							.onComplete( p1 )
-							.start();
-					}
+						if( cb ) {
+							if( hold > 0 ) {
+								window.setTimeout( cb, hold );
+							}
+							else {
+								cb();
+							}
+						}
+					});
+					
+					aPrevState = currentState;
+					aCurrentState = state;
+					
+					var p0 = p.promise();
+					var p1 = p.promise();
+					
+					new TWEEN.Tween( camera.position )
+						.to(states[ state ][ "position" ], duration)
+						.easing( TWEEN.Easing.Cubic.InOut )
+						.onComplete( p0 )
+						.start();
+					
+					var rotVec = getRotationVector( CameraInstance.rotation, states[ state ][ "rotation" ] );
+					new TWEEN.Tween( CameraInstance.rotation )
+						.to(rotVec, duration)
+						.easing( TWEEN.Easing.Cubic.InOut )
+						.onComplete( p1 )
+						.start();
+				};
+				
+				return {
+					go			: go,
+					current		: function() { return aCurrentState; },
+					previous	: function() { return aPrevState;	},
+					rotation	: function() { return states[ aCurrentState ].rotation; }
 				};
 			};
 			
-			var DiceController = (function() {
+			var DiceController = function( dice ) {
 				var faces = [
 					{ x: 0, 			y: -Math.PI/2, 	z: 0 	},
 					{ x: 0, 			y: Math.PI/2, 	z: 0 	},
@@ -874,30 +853,33 @@
 					{ x: Math.PI,		y: 0, 			z: 0 	}
 				];
 				
-				return {
-					animate: function( rand, cb ) {
-						new TWEEN.Tween( Objects.dice.position )
-							.to({ z: 500 }, 250)
-							.easing( TWEEN.Easing.Cubic.InOut )
-							.chain(
-								new TWEEN.Tween( Objects.dice.rotation )
-									.to( faces[ rand ], 250)
-									.easing( TWEEN.Easing.Cubic.InOut ),
-								new TWEEN.Tween( Objects.dice.position )
-									.to({ z: 20 }, 250)
-									.easing( TWEEN.Easing.Cubic.InOut )
-									.onComplete( function() { if( cb ) cb( (rand + 1) ); } )
-							)
-							.start();
-					},
-					roll: function( cb ) {
-						var rand = Math.floor( (Math.random() * 5.99) );
-						this.animate( rand, cb );
-					}
+				var animate = function( rand, cb ) {
+					new TWEEN.Tween( dice.position )
+						.to({ z: 500 }, 250)
+						.easing( TWEEN.Easing.Cubic.InOut )
+						.chain(
+							new TWEEN.Tween( dice.rotation )
+								.to( faces[ rand ], 250)
+								.easing( TWEEN.Easing.Cubic.InOut ),
+							new TWEEN.Tween( dice.position )
+								.to({ z: 20 }, 250)
+								.easing( TWEEN.Easing.Cubic.InOut )
+								.onComplete( function() { if( cb ) cb( (rand + 1) ); } )
+						)
+						.start();
 				};
-			})();
+				
+				var roll = function( cb ) {
+					var rand = Math.floor( (Math.random() * 5.99) );
+					animate( rand, cb );
+				};
+				
+				return {
+					roll: roll
+				};
+			};
 			
-			var PieceController = (function() {
+			var PieceController = function( piece ) {
 				var currentPosition = 1;
 				
 				var getMeasures = function( frame ) {
@@ -941,11 +923,11 @@
 						}
 						else {
 							var f = frame + movesDone;
-							move( f,  obj ).start();
+							step( f,  obj ).start();
 						}
 					};
 					
-					var move = function( f, obj ) {
+					var step = function( f, obj ) {
 						var p = evalFrame( f );
 						var vec = { z: obj.position.z };
 						if( p.axis === 0 ) {
@@ -958,37 +940,28 @@
 						}
 						
 						return new TWEEN.Tween( obj.position )
-							.to( vec, 500 )
+							.to( vec, 250 )
 							.easing( TWEEN.Easing.Cubic.InOut )
 							.onComplete( function() { moveDone( p ); } );
 					};
 					
-					return move( frame, obj );
+					return step( frame, obj );
+				};
+				
+				var move = function( steps, stepCb, doneCb ) {
+					generateChain( piece, currentPosition, steps, stepCb, function( newPosition, passed ) {
+						currentPosition = newPosition;
+						doneCb( newPosition, passed );
+					})
+					.start();
 				};
 				
 				return {
-					move: function( steps, stepCb, doneCb ) {
-						var chain = generateChain( Objects.piece, currentPosition, steps, stepCb, function( newPosition, passed ) {
-							currentPosition = newPosition;
-							doneCb( newPosition, passed );
-						});
-						
-						chain.start();
-					}
+					move: move
 				};
-			})();
-			
-			var LetsRollController = {
-				show: function() {
-					Objects.letsRollPlane.rotation.z = CameraControllerInstance.rotation().z;
-					LetsRoll.fadeIn( 500 );
-				},
-				hide: function() {
-					LetsRoll.fadeOut( 500 );
-				}
 			};
 			
-			var RiskController = (function() {
+			var RiskController = function() {
 				
 				var risks = {
 					influenza		: { risk: 0, phImpact: 20, mhImpact: 20 },
@@ -999,42 +972,46 @@
 					lplu			: { risk: 0, phImpact: 20, mhImpact: 20 }
 				};
 				
-				return {
-					generate: function() {
-						var sum = 0;
-						for( var k in risks ) {
-							if( k !== "influenza" ) {
-								var r = Math.random() * 0.2;
-								risks[ k ].lower = sum;
-								sum = sum + r;
-								risks[ k ].risk = r;
-								risks[ k ].upper = sum;
-							}
+				var generate = function() {
+					var sum = 0;
+					for( var k in risks ) {
+						if( k !== "influenza" ) {
+							var r = 0.1 + ( Math.random() * 0.1 );
+							risks[ k ].lower = sum;
+							sum = sum + r;
+							risks[ k ].risk = r;
+							risks[ k ].upper = sum;
 						}
-						risks[ "influenza" ].risk = 1 - sum;
-						risks[ "influenza" ].lower = sum;
-						risks[ "influenza" ].upper = 1;
-					},
-					get: function() {
-						return risks;
-					},
-					getRandom: function() {
-						var a = Math.random();
-						var sickness;
-						for( var s in risks ) {
-							if( a >= risks[ s ].lower && a < risks[ s ].upper ) {
-								return { sickness: s, risk: risks[ s ].risk, phImpact: risks[ s ].phImpact, mhImpact: risks[ s ].mhImpact };
-							}
+					}
+					risks[ "influenza" ].risk = 1 - sum;
+					risks[ "influenza" ].lower = sum;
+					risks[ "influenza" ].upper = 1;
+				};
+				
+				var getRandom = function() {
+					var a = Math.random();
+					for( var s in risks ) {
+						if( a > risks[ s ].lower && a < risks[ s ].upper ) {
+							return { 
+								sickness: s, 
+								risk: risks[ s ].risk, 
+								phImpact: risks[ s ].phImpact, 
+								mhImpact: risks[ s ].mhImpact
+							};
 						}
-						
-						return { sickness: "influenza", risk: risks[ "influenza" ].risk, phImpact: risks[ "influenza" ].phImpact, mhImpact: risks[ "influenza" ].mhImpact }
 					}
 				};
-			})();
-			
-			var BoardController = (function() {
-				RiskController.generate();
 				
+				generate();
+				
+				return {
+					get			: function() { return risks; },
+					getRandom	: getRandom
+				};
+			};
+			
+			var BoardController = function() {
+			
 				var boardStates = [
 					{ // 1 
 						type: "start"
@@ -1110,41 +1087,44 @@
 					}
 				];
 				
-				return {
-					hit: function( frame, passed, doneCb ) {
-						console.log( HealthJournal.physicalHealth().get() );
-						if( passed ) {
-							HealthJournal.balance().set( HealthJournal.balance().get() + HealthJournal.income().get() );
-							HealthJournal.age().set( HealthJournal.age().get() + 4 );
-						}
-						
-						var state = boardStates[ frame-1 ];
-						if( state.type === "seq" ) {
-							var r = RiskController.getRandom();
-							
-							HealthJournal.risks().set( r.sickness, Math.round(r.risk * 100) );
-							if( r.risk > 0.05 ) {
-								HealthJournal.mentalHealth().set( HealthJournal.mentalHealth().get() - 10 );
-							}
-							
-							HealthJournal.balance().set( HealthJournal.balance().get() - 10000 );
-						}
-						else if( state.type === "sickness" ) {
-							var r = RiskController.getRandom();
-							console.log( r );
-							HealthJournal.physicalHealth().set( HealthJournal.physicalHealth().get() - r.phImpact );
-							HealthJournal.mentalHealth().set( HealthJournal.mentalHealth().get() - r.mhImpact );
-						}
-						else if( state.type === "exercise" ) {
-							HealthJournal.physicalHealth().set( HealthJournal.physicalHealth().get() + 20 );
-							HealthJournal.mentalHealth().set( HealthJournal.mentalHealth().get() + 20 );
-							HealthJournal.balance().set( HealthJournal.balance().get() - 5000 );
-						}
-						
-						doneCb();
+				var hit = function( frame, passed, doneCb ) {
+					var hj = HealthJournalControllerInstance;
+					
+					console.log( hj.physicalHealth() );
+					if( passed ) {
+						hj.birthday();
 					}
+					
+					var state = boardStates[ frame-1 ];
+					if( state.type === "seq" ) {
+						var r = RiskControllerInstance.getRandom();
+						
+						hj.risk( r.sickness, Math.round(r.risk * 100) );
+						if( r.risk > 0.05 ) {
+							hj.mentalHealth( -10, true );
+						}
+						
+						hj.pay( 10000 );
+					}
+					else if( state.type === "sickness" ) {
+						var r = RiskControllerInstance.getRandom();
+						console.log( r );
+						hj.physicalHealth( -r.phImpact, true );
+						hj.mentalHealth( -r.mhImpact, true );
+					}
+					else if( state.type === "exercise" ) {
+						hj.physicalHealth( 20, true );
+						hj.mentalHealth( 20, true );
+						hj.pay( 5000 );
+					}
+					
+					doneCb();
 				};
-			})();
+				
+				return {
+					hit: hit
+				};
+			};
 			
 			var CardController = function() {
 				return {
@@ -1154,35 +1134,110 @@
 				};
 			};
 			
-			var ClipBoardController = function( container, clipBoard ) {
+			var PlayerDetailsController = function( el, posVector ) {
+				var visController = new VisibilityController( el, { opacity: 1 }, { opacity: 0 }, true );
+				
+				var place = function() {
+					var screen = Utils.toScreenCoordinates( posVector );
+					el.css({
+						left	: screen.x - ( el.outerWidth( true ) / 2 ),
+						top		: screen.y
+					});
+				};
+				
+				var show = function( cb ) {
+					place();
+					visController.show( 500, cb );
+				};
+				
+				var hide = function( cb ) {
+					visController.hide( 500, cb );
+				};
+				
 				return {
-					place: function() {
-						clipBoard.css({
-							top: 		(container.height() / 2) -
-										(clipBoard.outerHeight( true ) / 2),
-							opacity:	1
-						});
-					},
-					show: function( cb ) {
-						clipBoard.animate({
-							left: "-20px"
-						},
+					show	: show,
+					hide	: hide,
+					place	: place,
+					el		: function() { return el; }
+				};
+			};
+			
+			var LetsRollController = function( el, obj ) {
+				var visController = new VisibilityController( el, { opacity: 1 }, { opacity: 0 }, true );
+				
+				var show = function( rotation ) {
+					obj.rotation.z = rotation;
+					visController.show( 500 );
+				};
+				
+				var hide = function() {
+					visController.hide( 500 );
+				};
+				
+				return {
+					show: show,
+					hide: hide
+				};
+			};
+			
+			var ClipBoardController = function( container, clipBoard ) {
+				var visController = new VisibilityController( clipBoard, { left: "-20px" }, { left: "-311px" }, true );
+				
+				var show = function( cb ) {
+					place();
+					visController.show( 1000, cb );
+				};
+				
+				var hide = function( cb ) {
+					visController.hide( 1000, cb );
+				};
+				
+				var place = function() {
+					clipBoard.css({
+						top			: (container.height() / 2) -
+									  (clipBoard.outerHeight( true ) / 2),
+						opacity		: 1
+					});
+				};
+				
+				return {
+					show	: show,
+					hide	: hide,
+					place	: place
+				};
+			};
+			
+			var VisibilityController = function( el, onShow, onHide, initialHide ) {
+				var show = function( duration, cb ) {
+					el.animate(
+						onShow,
 						{
+							duration: duration,
 							complete: function() {
 								if( cb ) cb();
 							}
-						});
-					},
-					hide: function( cb ) {
-						clipBoard.animate({
-							left: "-311px"
-						},
+						}
+					);
+				};
+				
+				var hide = function( duration, cb ) {
+					el.animate(
+						onHide,
 						{
+							duration: duration,
 							complete: function() {
 								if( cb ) cb();
 							}
-						});
-					}
+						}
+					);
+				};
+				
+				if( initialHide )
+					hide( 0 );
+				
+				return {
+					show: show,
+					hide: hide
 				};
 			};
 			
@@ -1195,12 +1250,6 @@
 				var p0 = p.promise();
 				var p1 = p.promise();
 				var p2 = p.promise();
-				
-				PlayerDetails = $( "#playerDetails" );
-				PlayerDetails.hide();
-				
-				LetsRoll = $( ".lets" );
-				LetsRoll.fadeOut( 0 );
 				
 				Textures.wood = THREE.ImageUtils.loadTexture("tex/teak.jpg", {}, p0);
 				Textures.wood.wrapS = THREE.RepeatWrapping;
@@ -1230,15 +1279,15 @@
 					RendererInstance.setSize( $(window).width(), $(window).height() );
 					CameraInstance.aspect = $(window).width() / $(window).height();
 					CameraInstance.updateProjectionMatrix();
+					
 					ClipBoardControllerInstance.place();
-					if( PlayerDetails.is(":visible") )
-						Game.promptPlayerDetails();
+					PlayerDetailsControllerInstance.place();
 				});
 				
 				document.addEventListener( "mousedown", onDocumentMouseDown, false );
 			});
 		</script>
-		<div id="playerDetails">
+		<div class="playerDetails">
 			<p>
 				<input type="text" value="" class="name" placeholder="navn"/>
 			</p>
