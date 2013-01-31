@@ -1,0 +1,287 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	overflow: hidden;
+}
+
+.playerDetails {
+	position: absolute;
+	z-index: 200;
+	float: left;
+	clear: both;
+	opacity: 0;
+}
+
+.playerDetails .name {
+	text-transform: uppercase;
+	font-family: Open Sans;
+	font-weight: 300;
+	font-size: 16px;
+	padding: 5px;
+	text-align: center;
+	border-radius: 5px;
+	margin-bottom: 10px;
+}
+
+.playerDetails input[type=button] {
+	text-transform: uppercase;
+	font-family: Open Sans;
+	font-weight: 300;
+	font-size: 16px;
+	padding: 5px;
+	text-align: center;
+	border-radius: 5px;
+	background-color: #C60202;
+	color: #fff;
+}
+
+.playerDetails p {
+	text-align: center;
+}
+
+.playerDetails .sex {
+	background: #f00;
+	display: block;
+}
+
+.letsRoll {
+	width: 300px; 
+	height: 300px;
+	clear: both;
+	background: url(../tex/lets.png) no-repeat;
+	background-size: 100% 100%;
+	opacity: 0;
+}
+
+.card {
+	width: 800px;
+	height: 440px;
+	padding: 60px;
+	box-sizing: border-box;
+	background: url(../img/card.png) no-repeat;
+	background-size: 100% 100%;
+	opacity: 0;
+}
+
+.card h1 {
+	font-family: Open Sans;
+	font-weight: 300;
+	margin: 0;
+	font-size: 72px;
+	float: left;
+	clear: both;
+}
+
+.card p {
+	height: 145px;
+	font-family: Open Sans;
+	font-weight: 700;
+	text-transform: uppercase;
+	margin: 0;
+	font-size: 28px;
+	float: left;
+	clear: both;
+	margin-bottom: 20px;
+}
+
+.card div {
+	width: 100%;
+	float: left;
+	clear: both;
+}
+
+.card a {
+	font-family: Open Sans;
+	font-weight: 300;
+	text-transform: lowercase;
+	margin-left: 10px;
+	padding: 10px;
+	font-size: 36px;
+	float: right;
+	background: #c42026;
+	color: #fff;
+}
+
+.clipBoard {
+	width: 250px; 
+	height: 360px;
+	padding: 40px;
+	position: absolute; 
+	padding-top: 75px;
+	clear: both;
+	background: url(../img/clipBoard.png) no-repeat;
+	background-size: 100%;
+	opacity: 0;
+	left: -311px;
+}
+
+.clipboard .healthJournal {
+	float: left;
+	clear: both;
+}
+
+.clipboard .healthJournal .header {
+	float: left;
+	clear: both;
+	margin-bottom: 20px;
+}
+
+.clipboard .healthJournal .colorBar {
+	height: 50px;
+	width: 5px;
+	background: #f00;
+	margin-right: 10px;
+	float: left;
+}
+
+.clipboard .healthJournal .headerText {
+	float: left;
+}
+
+.clipboard .healthJournal h1 {
+	font-family: Open Sans;
+	font-weight: 300;
+	margin: 0;
+	font-size: 20px;
+}
+
+.clipboard .healthJournal h2 {
+	font-family: Open Sans;
+	font-weight: 600;
+	text-transform: uppercase;
+	margin: 0;
+	font-size: 14px;
+}
+
+.clipboard .healthJournal .picture {
+	width: 64px;
+	height: 64px;
+	float: left;
+	margin-right: 20px;
+}
+
+.clipboard .healthJournal .bio {
+	float: left;
+	clear: both;
+	margin-bottom: 10px;
+}
+
+.clipboard .healthJournal .bioInfo {
+	float: left;
+}
+
+.bioInfo .line {
+	float: left;
+	clear: both;
+}
+
+.bioInfo .key {
+	font-family: Open Sans;
+	font-size: 10px;
+	font-weight: 600;
+	float: left;
+	width: 100px;
+}
+
+.bioInfo .val {
+	font-family: Open Sans;
+	font-size: 10px;
+	font-weight: 300;
+	float: left;
+}
+
+.health {
+	float: left;
+	clear: both;
+	margin-bottom: 10px;
+}
+
+.health .line {
+	margin-bottom: 10px;
+	float: left;
+	clear: both;
+}
+
+.health .key {
+	font-family: Open Sans;
+	font-weight: 600;
+	font-size: 12px;
+	float: left;
+	clear: both;
+}
+
+.health .val {
+	font-family: Open Sans;
+	font-weight: 300;
+	float: left;
+	clear: both;
+}
+
+.progressBar {
+	width: 250px;
+	height: 8px;
+	border: 1px solid #333;
+	float: left;
+	clear: both;
+	padding: 0;
+}
+
+.progressBar .bar {
+	width: 10%;
+	height: 100%;
+	background: #f00;
+}
+
+.progressBar .perc {
+	width: 250px;
+	text-align: center;
+	position: absolute;
+	font-family: Open Sans;
+	font-weight: 600;
+	font-size: 8px;
+	margin-top: -2px;
+}
+
+.risks {
+	float: left;
+	clear: both;
+}
+
+.risks .key {
+	font-family: Open Sans;
+	font-weight: 600;
+	font-size: 12px;
+	float: left;
+	clear: both;
+}
+
+.risks .diseases {
+	font-family: Open Sans;
+	font-weight: 300;
+	float: left;
+	clear: both;
+}
+
+.risks .d {
+	float: left;
+	margin-right: 5px;
+}
+
+.risks .d .key {
+	font-family: Open Sans;
+	font-weight: 600;
+	font-size: 12px;
+	float: left;
+	clear: both;
+}
+
+.risks .d .progressBar {
+	width: 50px !important;
+}
+
+.risks .d .progressBar .perc {
+	width: 50px !important;
+}

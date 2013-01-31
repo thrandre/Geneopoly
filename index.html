@@ -5,246 +5,9 @@
 		<script src="js/lib/three.divMapper.js"></script>
 		<script src="js/lib/tween.js"></script>
 		<script src="js/lib/three.collada.js"></script>
-		<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600' rel='stylesheet' type='text/css' />
-		<style>
-			* {
-				margin: 0;
-				padding: 0;
-			}
-			
-			body {
-				overflow: hidden;
-			}
-			
-			.playerDetails {
-				position: absolute;
-				z-index: 200;
-				float: left;
-				clear: both;
-			}
-			
-			.playerDetails .name {
-				text-transform: uppercase;
-				font-family: Open Sans;
-				font-weight: 300;
-				font-size: 16px;
-				padding: 5px;
-				text-align: center;
-				border-radius: 5px;
-				margin-bottom: 10px;
-			}
-			
-			.playerDetails input[type=button] {
-				text-transform: uppercase;
-				font-family: Open Sans;
-				font-weight: 300;
-				font-size: 16px;
-				padding: 5px;
-				text-align: center;
-				border-radius: 5px;
-				background-color: #C60202;
-				color: #fff;
-			}
-			
-			.playerDetails p {
-				text-align: center;
-			}
-			
-			.playerDetails .sex {
-				background: #f00;
-				display: block;
-			}
-			
-			.letsRoll {
-				width: 150px; 
-				height: 150px;
-				clear: both;
-				background: url(tex/lets.png) no-repeat;
-				background-size: cover;
-				background-size: cover;
-			}
-			
-			.clipBoard {
-				width: 250px; 
-				height: 360px;
-				padding: 40px;
-				position: absolute; 
-				padding-top: 75px;
-				clear: both;
-				background: url(img/clipBoard.png) no-repeat;
-				background-size: 100%;
-				opacity: 0;
-				left: -311px;
-			}
-			
-			.clipboard .healthJournal {
-				float: left;
-				clear: both;
-			}
-			
-			.clipboard .healthJournal .header {
-				float: left;
-				clear: both;
-				margin-bottom: 20px;
-			}
-			
-			.clipboard .healthJournal .colorBar {
-				height: 50px;
-				width: 5px;
-				background: #f00;
-				margin-right: 10px;
-				float: left;
-			}
-			
-			.clipboard .healthJournal .headerText {
-				float: left;
-			}
-			
-			.clipboard .healthJournal h1 {
-				font-family: Open Sans;
-				font-weight: 300;
-				margin: 0;
-				font-size: 20px;
-			}
-			
-			.clipboard .healthJournal h2 {
-				font-family: Open Sans;
-				font-weight: 600;
-				text-transform: uppercase;
-				margin: 0;
-				font-size: 14px;
-			}
-			
-			.clipboard .healthJournal .picture {
-				width: 64px;
-				height: 64px;
-				float: left;
-				margin-right: 20px;
-			}
-			
-			.clipboard .healthJournal .bio {
-				float: left;
-				clear: both;
-				margin-bottom: 10px;
-			}
-			
-			.clipboard .healthJournal .bioInfo {
-				float: left;
-			}
-			
-			.bioInfo .line {
-				float: left;
-				clear: both;
-			}
-			
-			.bioInfo .key {
-				font-family: Open Sans;
-				font-size: 10px;
-				font-weight: 600;
-				float: left;
-				width: 100px;
-			}
-			
-			.bioInfo .val {
-				font-family: Open Sans;
-				font-size: 10px;
-				font-weight: 300;
-				float: left;
-			}
-			
-			.health {
-				float: left;
-				clear: both;
-				margin-bottom: 10px;
-			}
-			
-			.health .line {
-				margin-bottom: 10px;
-				float: left;
-				clear: both;
-			}
-			
-			.health .key {
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 12px;
-				float: left;
-				clear: both;
-			}
-			
-			.health .val {
-				font-family: Open Sans;
-				font-weight: 300;
-				float: left;
-				clear: both;
-			}
-			
-			.progressBar {
-				width: 250px;
-				height: 8px;
-				border: 1px solid #333;
-				float: left;
-				clear: both;
-				padding: 0;
-			}
-			
-			.progressBar .bar {
-				width: 10%;
-				height: 100%;
-				background: #f00;
-			}
-			
-			.progressBar .perc {
-				width: 250px;
-				text-align: center;
-				position: absolute;
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 8px;
-				margin-top: -2px;
-			}
-			
-			.risks {
-				float: left;
-				clear: both;
-			}
-			
-			.risks .key {
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 12px;
-				float: left;
-				clear: both;
-			}
-			
-			.risks .diseases {
-				font-family: Open Sans;
-				font-weight: 300;
-				float: left;
-				clear: both;
-			}
-			
-			.risks .d {
-				float: left;
-				margin-right: 5px;
-			}
-			
-			.risks .d .key {
-				font-family: Open Sans;
-				font-weight: 600;
-				font-size: 12px;
-				float: left;
-				clear: both;
-			}
-			
-			.risks .d .progressBar {
-				width: 50px !important;
-			}
-			
-			.risks .d .progressBar .perc {
-				width: 50px !important;
-			}
-		</style>
+		<script src="js/lib/sfx.js"></script>
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600" rel="stylesheet" type="text/css" />
+		<link href="css/main.css" rel="stylesheet" type="text/css" />
 	</head>
 	<body>
 		<script>
@@ -296,10 +59,12 @@
 				LetsRollControllerInstance,
 				ClipBoardControllerInstance,
 				BoardControllerInstance,
+				CardControllerInstance,
 				DivMapperInstance,
-				GameLock;
+				GameLock,
+				Sfx;
 			
-			var _AUTOPLAY_ = true;
+			var _AUTOPLAY_ = false;
 			
 			var Objects 		= {};
 			var Textures 		= {};
@@ -343,6 +108,9 @@
 			
 			var Game = {
 				init: function() {
+					Sfx = new SFX( "sfx", "mp3" );
+					Game.initSoundEffects();
+										
 					SceneInstance = new THREE.Scene();
 					
 					/*** CameraInstance ***/					
@@ -417,20 +185,33 @@
 					Objects.letsRollPlane.position.z = 5.1;
 					Objects.letsRollPlane.receiveShadow = true;
 					
+					Materials.cardSides = [
+						Materials.whitePhong,
+						Materials.whitePhong,
+						Materials.whitePhong,
+						Materials.whitePhong,
+						Materials.whitePhong,
+						Materials.card
+					];
+					
 					/* CARD STACK */
 					for( var z = 0; z < 50; z++ ) {
 						var c = new THREE.Mesh(
 							new THREE.CubeGeometry( 200, 110, 1 ),
-							Materials.card
+							new THREE.MeshFaceMaterial( Materials.cardSides )
 						);
+						
 						c.position.z = 5 + (z / 2);
 						c.position.x = -104;
 						c.position.y = 104;
-						c.rotation.z = ((-1 + (Math.random() * 2)) * (Math.PI / 128)) + Math.PI / 4;
+						c.rotation.z = ((-1 + (Math.random() * 2)) * (Math.PI / 128)) - Math.PI / 4;
+						c.rotation.x = Math.PI;
 						Objects.gameBoard.add( c );
 						if( z == 49 )
 							Objects.topCard = c;
 					}
+					
+					Objects.topCard.castShadow = true;
 					
 					/* PIECE */
 					Objects.piece = new THREE.Mesh(
@@ -485,7 +266,7 @@
 					SceneInstance.add( Light.helperLight2 );
 					
 					/*** RendererInstance ***/
-					RendererInstance = new THREE.WebGLRenderer({ antialias: true, precision: "highp" });
+					RendererInstance = new THREE.WebGLRenderer({ antialias: false });
 					RendererInstance.setSize( window.innerWidth, window.innerHeight );
 					RendererInstance.shadowMapEnabled = true;
 					RendererInstance.shadowMapSoft = true;
@@ -497,6 +278,7 @@
 					$( document.body ).append( $( RendererInstance.domElement ) );
 					
 					/*** INITIALIZE CONTROLLERS ***/
+					HealthJournalControllerInstance	= new HealthJournalController( $( ".healthJournal" ) );
 					CameraControllerInstance 		= new CameraController( CameraInstance, CameraStates );
 					ClipBoardControllerInstance 	= new ClipBoardController( $(window), $( ".clipBoard" ) );
 					LetsRollControllerInstance		= new LetsRollController( $( ".letsRoll" ), Objects.letsRollPlane );
@@ -504,10 +286,29 @@
 					PieceControllerInstance			= new PieceController( Objects.piece );
 					RiskControllerInstance			= new RiskController();
 					PlayerDetailsControllerInstance	= new PlayerDetailsController( $( ".playerDetails" ), new THREE.Vector3( 30, -30, 210 ) );
-					BoardControllerInstance			= new BoardController();
-					HealthJournalControllerInstance	= new HealthJournalController( $( ".healthJournal" ) );
+					BoardControllerInstance			= new BoardController( $( ".card" ) );
+					CardControllerInstance			= new CardController( CameraControllerInstance, Objects.topCard );
+					
+					$(window).resize(function() {
+						RendererInstance.setSize( $(window).width(), $(window).height() );
+						CameraInstance.aspect = $(window).width() / $(window).height();
+						CameraInstance.updateProjectionMatrix();
+						
+						ClipBoardControllerInstance.place();
+						PlayerDetailsControllerInstance.place();
+					});
+					
+					document.addEventListener( "mousedown", onDocumentMouseDown, false );
+				},
+				initSoundEffects: function() {
+					Sfx.add({
+						dice	: "dice",
+						slide	: [ "slide", 10, 20 ],
+						music	: "music"
+					});
 				},
 				promptPlayerDetails: function() {
+					Sfx.loop( "music" );
 					PlayerDetailsControllerInstance.show(function() {
 						var el = PlayerDetailsControllerInstance.el();
 						el.find( ".name" ).focus();
@@ -519,6 +320,7 @@
 								return;
 							}
 							Game.setInitialJournalValues( name, sex );
+							RiskControllerInstance.generate( sex );
 							el.fadeOut(500, function() {
 								CameraControllerInstance.go( "boardSide1", 1500, function() {
 									ClipBoardControllerInstance.show(function() {
@@ -542,6 +344,7 @@
 				start: function() {					
 					DivMapperInstance = new THREE.DivMapper( CameraInstance, $(document.body) );					
 					DivMapperInstance.map( $( ".letsRoll" ), Objects.letsRollPlane);
+					DivMapperInstance.map( $( ".card" ), Objects.topCard);
 					DivMapperInstance.update();
 					
 					GameLock = true;
@@ -839,7 +642,8 @@
 					go			: go,
 					current		: function() { return aCurrentState; },
 					previous	: function() { return aPrevState;	},
-					rotation	: function() { return states[ aCurrentState ].rotation; }
+					rotation	: function() { return states[ aCurrentState ].rotation; },
+					position	: function() { return states[ aCurrentState ].position; }
 				};
 			};
 			
@@ -864,12 +668,16 @@
 							new TWEEN.Tween( dice.position )
 								.to({ z: 20 }, 250)
 								.easing( TWEEN.Easing.Cubic.InOut )
-								.onComplete( function() { if( cb ) cb( (rand + 1) ); } )
+								.onComplete(function() { 
+									Sfx.play( "dice" );
+									if( cb ) cb( (rand + 1) ); 
+								})
 						)
 						.start();
 				};
 				
 				var roll = function( cb ) {
+					Sfx.volume( "music", 30 );
 					var rand = Math.floor( (Math.random() * 5.99) );
 					animate( rand, cb );
 				};
@@ -942,7 +750,10 @@
 						return new TWEEN.Tween( obj.position )
 							.to( vec, 250 )
 							.easing( TWEEN.Easing.Cubic.InOut )
-							.onComplete( function() { moveDone( p ); } );
+							.onComplete(function() { 
+								Sfx.play( "slide" );
+								moveDone( p ); 
+							});
 					};
 					
 					return step( frame, obj );
@@ -962,55 +773,84 @@
 			};
 			
 			var RiskController = function() {
+				var std = 0.0333;
 				
-				var risks = {
-					influenza		: { risk: 0, phImpact: 20, mhImpact: 20 },
-					heartAttack		: { risk: 0, phImpact: 70, mhImpact: 70 },
-					stroke			: { risk: 0, phImpact: 70, mhImpact: 70 },
-					breastCancer	: { risk: 0, phImpact: 70, mhImpact: 70 },
-					cysticFibrosis	: { risk: 0, phImpact: 30, mhImpact: 20 },
-					lplu			: { risk: 0, phImpact: 20, mhImpact: 20 }
+				var influenza = { name: "Influenza", phImpact: 20, mhImpact: 10 };
+				
+				var risks = [
+					{ name: "HK",				baseRisk: 0.4,	risk: 0.0, phImpact: 20, mhImpact: 30, sequenced: false },
+					{ name: "Brystkreft",		baseRisk: 0.0,	risk: 0.0, phImpact: 20, mhImpact: 20, sequenced: false },
+					{ name: "CF",				baseRisk: 0.2,	risk: 0.0, phImpact: 50, mhImpact: 50, sequenced: false },
+					{ name: "LPLU",				baseRisk: 0.1,	risk: 0.0, phImpact: 30, mhImpact: 40, sequenced: false }
+				];
+				
+				// Central limit theorem to approx. normal cdf
+				var normal = function( mean, dev ) {
+					return ( ( (Math.random()*2-1) + (Math.random()*2-1) + (Math.random()*2-1) ) * dev ) + mean;
 				};
 				
-				var generate = function() {
+				var generate = function( gender ) {
+					if( gender === "male" ) { risks[ 1 ].baseRisk = 0.1; }
+					else { risks[ 1 ].baseRisk = 0.2; }
+					
+					risks.sort( function() { return 0.5 - Math.random(); } );
+					
+					var delta = 0;
 					var sum = 0;
-					for( var k in risks ) {
-						if( k !== "influenza" ) {
-							var r = 0.1 + ( Math.random() * 0.1 );
-							risks[ k ].lower = sum;
-							sum = sum + r;
-							risks[ k ].risk = r;
-							risks[ k ].upper = sum;
-						}
+					for( var i in risks ) {
+						var mju = risks[ i ].baseRisk;
+						if( mju < 3*std ) mju = 3*std;
+						var norm = normal( mju, std );
+						risks[ i ].risk = norm;
+						delta = mju - norm;
+						sum = sum + norm;
 					}
-					risks[ "influenza" ].risk = 1 - sum;
-					risks[ "influenza" ].lower = sum;
-					risks[ "influenza" ].upper = 1;
-				};
-				
-				var getRandom = function() {
-					var a = Math.random();
-					for( var s in risks ) {
-						if( a > risks[ s ].lower && a < risks[ s ].upper ) {
-							return { 
-								sickness: s, 
-								risk: risks[ s ].risk, 
-								phImpact: risks[ s ].phImpact, 
-								mhImpact: risks[ s ].mhImpact
-							};
+					if( sum > 1 ) {
+						var ex = ( sum - 1 ) / risks.length;
+						for( var i in risks ) {
+							risks[ i ] = risks[ i ] - ex;
 						}
 					}
 				};
 				
-				generate();
+				var sequence = function() {
+					for( var i in risks ) {
+						if( !risks[ i ].sequenced ) {
+							return risks[ i ];
+						}
+					}
+					
+					return false;
+				};
+				
+				var illness = function() {					
+					var sum = 0;
+					for( var i in risks ) {
+						var ill = risks[ i ];
+						ill.lower = sum;
+						ill.upper = sum + ill.risk;
+						sum = ill.upper;
+					}
+					
+					var u = Math.random();
+					
+					for( var i in risks ) {
+						if( u >= risks[ i ].lower && u < risks[ i ].upper ) {
+							return risks[ i ];
+						}
+					}
+					
+					return influenza;
+				};
 				
 				return {
-					get			: function() { return risks; },
-					getRandom	: getRandom
+					generate	: generate,
+					sequence	: sequence,
+					illness		: illness
 				};
 			};
 			
-			var BoardController = function() {
+			var BoardController = function( cardElement ) {
 			
 				var boardStates = [
 					{ // 1 
@@ -1087,50 +927,276 @@
 					}
 				];
 				
-				var hit = function( frame, passed, doneCb ) {
-					var hj = HealthJournalControllerInstance;
+				var hj = HealthJournalControllerInstance;
+				
+				var init = function() {
+					cardElement.css( "opacity", 1 );
+				};
+				
+				var updateCard = function( heading, text, buttons ) {
+					cardElement.find(  "h1"	).text( heading );
+					cardElement.find(  "p" 	).text( text );
 					
-					console.log( hj.physicalHealth() );
+					var buttonContainer = cardElement.find( ".buttons" );
+					buttonContainer.empty();
+					
+					for( var i in buttons ) {
+						var b = buttons[ i ];
+						if( !b.cost || hj.balance() >= b.cost ) {
+							var el = $("<a>" + b.text + "</a>");
+							el.click( b.click );
+							buttonContainer.append( el );
+						}
+					}
+				};
+				
+				var dead = function() {
+					updateCard( 
+						"Død", 
+						"Det er erklært landesorg etter din bortgang. " + hj.name() + " ble " + hj.age() + " år gammel. Takk for at du spilte Geneopoly!",
+						[
+							{ 
+								text: 	"Nytt spill", 
+								click:	function() {
+									location.reload();
+								}
+							},
+							{ 
+								text: 	"Get free stuff", 
+								click:	function() {
+									window.location = "http://www.youtube.com/watch?v=oHg5SJYRHA0";
+								}
+							}
+						]
+					);
+					CardControllerInstance.draw();
+				};
+				
+				var bankrupt = function() {
+					updateCard( 
+						"Konkurs", 
+						"Lokal finanskrise! Du er blakk som ei kirkerotte. Takk for at du spilte Geneopoly!",
+						[
+							{ 
+								text: 	"Nytt spill", 
+								click:	function() {
+									location.reload();
+								}
+							},
+							{ 
+								text: 	"Get free stuff", 
+								click:	function() {
+									window.location = "http://www.youtube.com/watch?v=oHg5SJYRHA0";
+								}
+							}
+						]
+					);
+					CardControllerInstance.draw();
+				};
+				
+				var win = function() {
+					updateCard( 
+						"Gratulerer!", 
+						"Du toppa heile driden. Takk for at du spilte Geneopoly!",
+						[
+							{ 
+								text: 	"Nytt spill", 
+								click:	function() {
+									location.reload();
+								}
+							}
+						]
+					);
+					CardControllerInstance.draw();
+				};
+				
+				var endTurn = function( doneCb ) {
+					if( hj.physicalHealth() <= 0 ) {
+						dead();
+					}
+					else if( hj.balance() < 0 ) {
+						bankrupt();
+					}
+					else if( hj.age() >= 76 ) {
+						win();
+					}
+					else {
+						doneCb();
+					}
+				};
+				
+				var hit = function( frame, passed, doneCb ) {
+					
 					if( passed ) {
 						hj.birthday();
 					}
 					
 					var state = boardStates[ frame-1 ];
 					if( state.type === "seq" ) {
-						var r = RiskControllerInstance.getRandom();
-						
-						hj.risk( r.sickness, Math.round(r.risk * 100) );
-						if( r.risk > 0.05 ) {
-							hj.mentalHealth( -10, true );
+						var s = RiskControllerInstance.sequence();
+						if( s ) {
+							updateCard( 
+								"Sekvensering", 
+								"Du får vite din risiko for å utvikle en genetisk sykdom. Dette koster 10.000 og kan få innvirkning på din mentale helse dersom du er over gjennomsnittlig utsatt.",
+								[
+									{ 
+										text: 	"Ja takk", 
+										cost:	10000,
+										click:	function() {
+											hj.risk( s.name, Math.round( s.risk * 100 ) );
+											hj.pay( 10000 );
+											
+											s.sequenced = true;
+											
+											if( s.risk > s.baseRisk ) {
+												hj.mentalHealth( -20, true );
+											}
+											
+											CardControllerInstance.putBack();
+											endTurn( doneCb );
+										}
+									},
+									{ 
+										text: 	"Nei takk", 
+										click:	function() {
+											CardControllerInstance.putBack();
+											endTurn( doneCb );
+										}
+									}
+								]
+							);
+							CardControllerInstance.draw();
 						}
-						
-						hj.pay( 10000 );
+						else {
+							doneCb();
+						}
 					}
 					else if( state.type === "sickness" ) {
-						var r = RiskControllerInstance.getRandom();
-						console.log( r );
-						hj.physicalHealth( -r.phImpact, true );
-						hj.mentalHealth( -r.mhImpact, true );
+						var s = RiskControllerInstance.illness();
+						updateCard( 
+							"Sykdom", 
+							"Å nei! Du har blitt syk og fått påvist " + s.name + ". Som resultat har du mistet " + s.phImpact + "% av din fysiske helse, og " + s.mhImpact + "% av din mentale helse. God bedring!"
+						);
+						CardControllerInstance.draw(function() {
+							window.setTimeout(function() {
+								hj.physicalHealth( -s.phImpact, true );
+								hj.mentalHealth( -s.mhImpact, true );
+								CardControllerInstance.putBack();
+								endTurn( doneCb );
+							}, 7000);
+						});
 					}
 					else if( state.type === "exercise" ) {
-						hj.physicalHealth( 20, true );
-						hj.mentalHealth( 20, true );
-						hj.pay( 5000 );
+						if( hj.mentalHealth() < 100 || hj.physicalHealth() < 100 ) {
+							updateCard( 
+								"Trening", 
+								"Du har muligheten til å trene. Et medlemskap koster 5000 og har positiv effekt på både mental og fysisk helse (10%)",
+								[
+									{ 
+										text: 	"Ja takk", 
+										cost:	5000,
+										click:	function() {
+											hj.pay( 5000 );
+											hj.mentalHealth( 10, true );
+											hj.physicalHealth( 10, true );
+											
+											CardControllerInstance.putBack();
+											endTurn( doneCb );
+										}
+									},
+									{ 
+										text: 	"Nei takk", 
+										click:	function() {
+											CardControllerInstance.putBack();
+											endTurn( doneCb );
+										}
+									}
+								]
+							);
+							CardControllerInstance.draw();
+						}
+						else {
+							endTurn( doneCb );
+						}
 					}
-					
-					doneCb();
+					else {
+						endTurn( doneCb );
+					}
 				};
+				
+				init();
 				
 				return {
 					hit: hit
 				};
 			};
 			
-			var CardController = function() {
+			var CardController = function( cameraController, topCard ) {
+				var defPos,
+					defRot;
+				
+				var init = function() {
+					defPos = topCard.position.clone();
+					defRot = topCard.rotation.clone();
+				};
+				
+				var draw = function( doneCb ) {
+					var pos	= {},
+						rot = {};
+					
+					GameLock = true;
+					
+					var p = new Parallel(function() {
+						if( doneCb )
+							doneCb();
+					});
+					
+					pos.x = (cameraController.position().x === 0 ? 
+						0 : 
+						( cameraController.position().x > 0 ? 
+							cameraController.position().x - 200 : 
+							cameraController.position().x + 200 )
+					);
+					
+					pos.y = (cameraController.position().y === 0 ? 
+						0 : 
+						( cameraController.position().y > 0 ? 
+							cameraController.position().y - 200 : 
+							cameraController.position().y + 200 )
+					);
+					
+					pos.z = 670;
+					
+					rot = cameraController.rotation();
+					
+					var p0 = p.promise();
+					var p1 = p.promise();
+					
+					new TWEEN.Tween( topCard.position )
+						.to(pos, 500)
+						.easing( TWEEN.Easing.Cubic.InOut )
+						.onComplete( p0 )
+						.start();
+					
+					new TWEEN.Tween( topCard.rotation )
+						.to(rot, 500)
+						.easing( TWEEN.Easing.Cubic.InOut )
+						.onComplete( p1 )
+						.start();
+					
+				};
+				
+				var putBack = function() {
+					$.extend( topCard.position, defPos );
+					$.extend( topCard.rotation, defRot );
+					GameLock = false;
+				};
+				
+				init();
+				
 				return {
-					draw: function() {
-						
-					}
+					draw	: draw,
+					putBack	: putBack
 				};
 			};
 			
@@ -1250,6 +1316,7 @@
 				var p0 = p.promise();
 				var p1 = p.promise();
 				var p2 = p.promise();
+				var p3 = p.promise();
 				
 				Textures.wood = THREE.ImageUtils.loadTexture("tex/teak.jpg", {}, p0);
 				Textures.wood.wrapS = THREE.RepeatWrapping;
@@ -1269,22 +1336,13 @@
 				Textures.card.repeat.set(1, 1);
 				Textures.card.needsUpdate = true;
 				
+				Textures.clip = THREE.ImageUtils.loadTexture("img/clipBoard.png", {}, p3);
+				
 				Textures.dice = [];
 				for( var i = 0; i < 6; i++ ) {
 					var cb = p.promise();
 					Textures.dice[ i ] = THREE.ImageUtils.loadTexture("tex/dice" + (i+1) + ".png", {}, cb);
 				}
-				
-				$(window).resize(function() {
-					RendererInstance.setSize( $(window).width(), $(window).height() );
-					CameraInstance.aspect = $(window).width() / $(window).height();
-					CameraInstance.updateProjectionMatrix();
-					
-					ClipBoardControllerInstance.place();
-					PlayerDetailsControllerInstance.place();
-				});
-				
-				document.addEventListener( "mousedown", onDocumentMouseDown, false );
 			});
 		</script>
 		<div class="playerDetails">
@@ -1357,6 +1415,14 @@
 			</div>
 		</div>
 	
-		<div class="letsRoll"></div>
+		<div class="letsRoll">
+		</div>
+		<div class="card">
+			<h1>Sykdom</h1>
+			<p>Du er død! Pang! Lorem ipsus dolore sit. Lorem ipsus dolore sit.</p>
+			<div class="buttons">
+				<a>Ferdig</a>
+			</div>
+		</div>
 	</body>
 </html>
