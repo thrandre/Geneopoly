@@ -295,7 +295,7 @@
 						CameraInstance.updateProjectionMatrix();
 						
 						ClipBoardControllerInstance.place();
-						PlayerDetailsControllerInstance.place();
+						PlayerDetailsControllerInstance.show();
 					});
 					
 					document.addEventListener( "mousedown", onDocumentMouseDown, false );
@@ -555,6 +555,8 @@
 				
 				var birthday = function() {
 					age( 4, true );
+					mentalHealth( 10, true );
+					physicalHealth( 20, true );
 					balance( income(), true );
 				};
 				
@@ -775,13 +777,13 @@
 			var RiskController = function() {
 				var std = 0.0333;
 				
-				var influenza = { name: "Influenza", phImpact: 20, mhImpact: 10 };
+				var influenza = { name: "Influenza", phImpact: 20, mhImpact: 10, read: "http://nhi.no/foreldre-og-barn/ungdom/sykdommer/influensa-1745.html" };
 				
 				var risks = [
-					{ name: "HK",				baseRisk: 0.4,	risk: 0.0, phImpact: 20, mhImpact: 30, sequenced: false },
-					{ name: "Brystkreft",		baseRisk: 0.0,	risk: 0.0, phImpact: 20, mhImpact: 20, sequenced: false },
-					{ name: "CF",				baseRisk: 0.2,	risk: 0.0, phImpact: 50, mhImpact: 50, sequenced: false },
-					{ name: "LPLU",				baseRisk: 0.1,	risk: 0.0, phImpact: 30, mhImpact: 40, sequenced: false }
+					{ id: 1, name: "Hjerte/kar-lidelse",				baseRisk: 0.4,	risk: 0.0, phImpact: 20, mhImpact: 30, sequenced: false, read: "http://nhi.no/sykdommer/hjerte-kar/"										},
+					{ id: 2, name: "Brystkreft",						baseRisk: 0.0,	risk: 0.0, phImpact: 20, mhImpact: 20, sequenced: false, read: "http://nhi.no/sykdommer/kreft/brystkreft/brystkreft-1349.html"				},
+					{ id: 3, name: "Cystisk fibrose",					baseRisk: 0.2,	risk: 0.0, phImpact: 50, mhImpact: 50, sequenced: false, read: "http://nhi.no/foreldre-og-barn/barn/sykdommer/cystisk-fibrose-2134.html"	},
+					{ id: 4, name: "Lipoprotein-lipase-underskudd",		baseRisk: 0.1,	risk: 0.0, phImpact: 30, mhImpact: 40, sequenced: false, read: "http://www.bion.no/2012/11/genterapi-godkjent/"								}
 				];
 				
 				// Central limit theorem to approx. normal cdf
@@ -811,6 +813,24 @@
 							risks[ i ] = risks[ i ] - ex;
 						}
 					}
+				};
+				
+				var get = function( id ) {
+					for( var i in risks ) {
+						if( risks[ i ].id === id )
+							return risks[ i ];
+					}
+					
+					return false;
+				};
+				
+				var sum = function() {
+					var s = 0;
+					for( var i in risks ) {
+						s = s + risks[i];
+					}
+					
+					return s;
 				};
 				
 				var sequence = function() {
@@ -843,90 +863,130 @@
 					return influenza;
 				};
 				
+				var alterRisk = function( id, factor ) {
+					var r = get( id );
+					r.risk = r.risk * factor;
+				};
+				
+				var alterAllRisks = function( factor ) {
+					for( var i in risks ) {
+						alterRisk( risks[ i ].id, factor );
+					}
+				};
+				
+				var maxRisk = function() {
+					var s = { risk: 0 };
+					for( var i in risks ) {
+						if( risks[ i ].risk > s.risk ) {
+							s = risks[ i ];
+						}
+					}
+					if( s.risk > 0 ) return s;
+					else return false;
+				};
+				
+				var getAll = function() {
+					return risks;
+				};
+				
 				return {
-					generate	: generate,
-					sequence	: sequence,
-					illness		: illness
+					get				: get,
+					generate		: generate,
+					sequence		: sequence,
+					illness			: illness,
+					maxRisk			: maxRisk,
+					alterRisk		: alterRisk,
+					alterAllRisks	: alterAllRisks,
+					getAll			: getAll
 				};
 			};
 			
 			var BoardController = function( cardElement ) {
 			
 				var boardStates = [
-					{ // 1 
-						type: "start"
-					},
-					{ // 2
-						type: "free" 
-					},
-					{ // 3
-						type: "free" 
-					},
-					{ // 4
-						type: "free" 
-					},
-					{ // 5
-						type: "sickness" 
-					},
-					{ // 6
-						type: "exercise" 
-					},
-					{ // 7
-						type: "seq" 
-					},
-					{ // 8
-						type: "free" 
-					},
-					{ // 9
-						type: "free" 
-					},
-					{ // 10
-						type: "free" 
-					},
-					{ // 11
-						type: "sickness" 
-					},
-					{ // 12
-						type: "exercise" 
-					},
-					{ // 13
-						type: "seq" 
-					},
-					{ // 14
-						type: "free" 
-					},
-					{ // 15
-						type: "free" 
-					},
-					{ // 16
-						type: "free" 
-					},
-					{ // 17
-						type: "sickness" 
-					},
-					{ // 18
-						type: "exercise" 
-					},
-					{ // 19
-						type: "seq" 
-					},
-					{ // 20
-						type: "free" 
-					},
-					{ // 21
-						type: "free" 
-					},
-					{ // 22
-						type: "free" 
-					},
-					{ // 23
-						type: "sickness" 
-					},
-					{ // 24
-						type: "exercise" 
-					}
+					{ /* 1 */ 	type: "start"	}, { /* 2 */	type: "free" }, { /* 3 */ 	type: "medicine" 	}, { /* 4 */ 	type: "chance" 	}, { /* 5 */ 	type: "sickness"	}, { /* 6 */ 	type: "exercise" },
+					{ /* 7 */ 	type: "seq"		}, { /* 8 */	type: "free" }, { /* 9 */ 	type: "medicine"	}, { /* 10 */ 	type: "chance"	}, { /* 11 */	type: "sickness"	}, { /* 12 */	type: "exercise" },
+					{ /* 13 */	type: "seq" 	}, { /* 14 */	type: "free" },	{ /* 15 */	type: "medicine" 	}, { /* 16 */	type: "chance"	}, { /* 17 */	type: "sickness"	}, { /* 18 */	type: "exercise" },
+					{ /* 19 */	type: "seq"		}, { /* 20 */	type: "free" }, { /* 21 */	type: "medicine"	}, { /* 22 */	type: "chance"	}, { /* 23 */	type: "sickness"	}, { /* 24 */	type: "exercise" }
 				];
 				
+				var events = [
+					{
+						heading	: "Jippi!",
+						text	: "Du får utarbeidet et skreddersydd treningsopplegg som gir helsegevinst. Motta 20 % ekstra på mental og fysisk helse.",
+						impacts	: {
+							ph: 20,
+							mh: 20
+						}
+					},
+					{
+						heading	: "Jippi!",
+						text	: "Etter sjekk hos lege, viste det seg at ditt blodtrykk er for høyt. På bakgrunn av din genprofil er riktig dose av Warfarin blitt utskrevet. Din mentale helse øker med 30%.",
+						impacts	: {
+							mh: 30
+						}
+					},
+					{
+						heading	: "Jippi!",
+						text	: "Du har vunnet i lotto, motta 100.000",
+						impacts	: {
+							balance: 100000
+						}
+					},
+					{
+						heading	: "Jippi!",
+						text	: "Din familie har høy forekomst av Cystic Fibrose. Din sønn har fylt 16 år og har gentestet seg. Svaret på prøvene er kommet, og han var er ikke bærer. Din mentale helse økes med 30%.",
+						impacts	: {
+							mh: 30
+						}
+					},
+					{
+						heading	: "Jippi!",
+						text	: "Du er med i et forskningsprosjekt og får kurert eventuelle sykdommer. Ditt bidrag gir deg 100% i mental helse, 100% i fysisk helse og 50.000 i honorar.",
+						impacts	: {
+							mh		: 100,
+							ph		: 100,
+							balance	: 50000
+						}
+					},
+					{
+						heading	: "#$¤!!",
+						text	: "Du har vært med i en bilulykke og blir sengeliggende en måned. Mental og fysisk helse reduseres med 20%.",
+						impacts	: {
+							mh		: -20,
+							ph		: -20
+						}
+					},
+					{
+						heading	: "#$¤!!",
+						text	: "Du har vært på kontroll hos fastlegen og får vite at du trolig har mutasjon i brystkreftgenet BRCA1. Din mentale helse blir redusert med 40%.",
+						impacts	: {
+							mh		: -40
+						}
+					},
+					{
+						heading	: "#$¤!!",
+						text	: "Etter sjekk hos lege, viste det seg at ditt blodtrykk er for høyt. Du får utskrevet feil dose Warfarin og får slag som bivirkning. Din mentale helse reduseres med 30%.",
+						impacts	: {
+							mh		: -30
+						}
+					},
+					{
+						heading	: "#$¤!!",
+						text	: "Du har fått vite at du er en bærer av et alvorlig sykdomsgen som kan videreføres til ditt avkom. Dette resulterer i en depresjon. Mental helse reduseres med 20%.",
+						impacts	: {
+							mh		: -20
+						}
+					},
+					{
+						heading	: "#$¤!!",
+						text	: "Staten har bestemt at de skal sponse dyr genterapibehndling. Betal 25.000 kr i skatt.",
+						impacts	: {
+							balance	: -25000
+						}
+					}
+				];
+				 
 				var hj = HealthJournalControllerInstance;
 				
 				var init = function() {
@@ -946,6 +1006,15 @@
 							var el = $("<a>" + b.text + "</a>");
 							el.click( b.click );
 							buttonContainer.append( el );
+						}
+					}
+				};
+				
+				var updateJournalRisks = function() {
+					var risks = RiskControllerInstance.getAll();
+					for( var i in risks ) {
+						if( risks[ i ].sequenced ) {
+							hj.risk( risks[ i ].name, Math.round( risks[ i ].risk * 100 ) );
 						}
 					}
 				};
@@ -1037,16 +1106,15 @@
 						if( s ) {
 							updateCard( 
 								"Sekvensering", 
-								"Du får vite din risiko for å utvikle en genetisk sykdom. Dette koster 10.000 og kan få innvirkning på din mentale helse dersom du er over gjennomsnittlig utsatt.",
+								"Du får vite din risiko for å utvikle en genetisk sykdom. Dette koster 50.000 og kan få innvirkning på din mentale helse dersom du er over gjennomsnittlig utsatt, men gir tilgang til avanserte behandlingsformer.",
 								[
 									{ 
 										text: 	"Ja takk", 
-										cost:	10000,
+										cost:	50000,
 										click:	function() {
-											hj.risk( s.name, Math.round( s.risk * 100 ) );
-											hj.pay( 10000 );
-											
 											s.sequenced = true;
+											updateJournalRisks();
+											hj.pay( 50000 );
 											
 											if( s.risk > s.baseRisk ) {
 												hj.mentalHealth( -20, true );
@@ -1075,30 +1143,46 @@
 						var s = RiskControllerInstance.illness();
 						updateCard( 
 							"Sykdom", 
-							"Å nei! Du har blitt syk og fått påvist " + s.name + ". Som resultat har du mistet " + s.phImpact + "% av din fysiske helse, og " + s.mhImpact + "% av din mentale helse. God bedring!"
+							"Å nei! Du har blitt syk og fått påvist " + s.name + ". Som resultat har du mistet " + s.phImpact + "% av din fysiske helse, og " + s.mhImpact + "% av din mentale helse. God bedring!",
+							[
+								{ 
+									text: 	"Videre", 
+									click:	function() {
+										hj.physicalHealth( -s.phImpact, true );
+										hj.mentalHealth( -s.mhImpact, true );
+										
+										CardControllerInstance.putBack();
+										endTurn( doneCb );
+									}
+								},
+								{ 
+									text: 	"Les mer", 
+									click:	function() {
+										CardControllerInstance.putBack();
+										window.open( s.read, "_blank" );
+										endTurn( doneCb );
+									}
+								}
+							]
 						);
-						CardControllerInstance.draw(function() {
-							window.setTimeout(function() {
-								hj.physicalHealth( -s.phImpact, true );
-								hj.mentalHealth( -s.mhImpact, true );
-								CardControllerInstance.putBack();
-								endTurn( doneCb );
-							}, 7000);
-						});
+						CardControllerInstance.draw();
 					}
 					else if( state.type === "exercise" ) {
 						if( hj.mentalHealth() < 100 || hj.physicalHealth() < 100 ) {
 							updateCard( 
 								"Trening", 
-								"Du har muligheten til å trene. Et medlemskap koster 5000 og har positiv effekt på både mental og fysisk helse (10%)",
+								"Du har muligheten til å trene. Et medlemskap koster 7.500, har positiv effekt på både mental og fysisk helse (10%) og reduserer alle sykdomsrisikoer med 10%.",
 								[
 									{ 
 										text: 	"Ja takk", 
-										cost:	5000,
+										cost:	7500,
 										click:	function() {
-											hj.pay( 5000 );
+											hj.pay( 7500 );
 											hj.mentalHealth( 10, true );
 											hj.physicalHealth( 10, true );
+											
+											RiskControllerInstance.alterAllRisks( 0.90 );
+											updateJournalRisks();
 											
 											CardControllerInstance.putBack();
 											endTurn( doneCb );
@@ -1112,6 +1196,98 @@
 										}
 									}
 								]
+							);
+							CardControllerInstance.draw();
+						}
+						else {
+							endTurn( doneCb );
+						}
+					}
+					else if( state.type === "chance" ) {
+						var r = Math.floor( (Math.random() * (events.length - 0.01)) );
+						var e = events[ r ];
+						
+						updateCard( 
+							e.heading, 
+							e.text,
+							[
+								{ 
+									text: 	"Videre", 
+									click:	function() {
+										CardControllerInstance.putBack();
+										
+										if( e.impacts ) {
+											if( e.impacts.ph ) {
+												hj.physicalHealth( e.impacts.ph, true );
+											}
+											if( e.impacts.mh ) {
+												hj.mentalHealth( e.impacts.mh, true );
+											}
+											if( e.impacts.balance ) {
+												hj.balance( e.impacts.balance, true );
+											}
+										}
+										
+										endTurn( doneCb );
+									}
+								}
+							]
+						);
+						CardControllerInstance.draw();
+					}
+					else if( state.type === "medicine" ) {
+						var s = RiskControllerInstance.maxRisk();
+						if( s ) {
+							var buttons = [
+							{
+								text: 	"Nei takk", 
+								click:	function() {
+									CardControllerInstance.putBack();
+									endTurn( doneCb );
+								}
+							},
+							{
+								text	: "Symptomdempende",
+								cost	: 20000,
+								click	: function() {
+									hj.pay( 20000 );
+									RiskControllerInstance.alterRisk( s.id, 0.7 );
+									updateJournalRisks();
+									CardControllerInstance.putBack();
+									endTurn( doneCb );
+								}
+							}];
+							
+							if( s.sequenced ) {
+								buttons.push({
+									text	: "Pers. med",
+									cost	: 150000,
+									click	: function() {
+										hj.pay( 150000 );
+										RiskControllerInstance.alterRisk( s.id, 0.3 );
+										updateJournalRisks();
+										CardControllerInstance.putBack();
+										endTurn( doneCb );
+									}
+								});
+								
+								buttons.push({
+									text	: "Genterapi",
+									cost	: 400000,
+									click	: function() {
+										hj.pay( 400000 );
+										RiskControllerInstance.alterRisk( s.id, 0 );
+										updateJournalRisks();
+										CardControllerInstance.putBack();
+										endTurn( doneCb );
+									}
+								});
+							}
+							
+							updateCard( 
+								"Medisin", 
+								"Du er spesielt utsatt for " + s.name + ". Du kan forebygge sykdommen. Symptomreduserende medisin (-30% risiko) koster 20.000. Dersom de aktive genene er kartlagt hos deg kan du kjøpe personlig medisin (-70% risiko) for 150.000 eller genterapi (-100% risiko) for 400.000.",
+								buttons
 							);
 							CardControllerInstance.draw();
 						}
@@ -1173,13 +1349,13 @@
 					var p1 = p.promise();
 					
 					new TWEEN.Tween( topCard.position )
-						.to(pos, 500)
+						.to(pos, 1000)
 						.easing( TWEEN.Easing.Cubic.InOut )
 						.onComplete( p0 )
 						.start();
 					
 					new TWEEN.Tween( topCard.rotation )
-						.to(rot, 500)
+						.to(rot, 1000)
 						.easing( TWEEN.Easing.Cubic.InOut )
 						.onComplete( p1 )
 						.start();
@@ -1204,10 +1380,11 @@
 				var visController = new VisibilityController( el, { opacity: 1 }, { opacity: 0 }, true );
 				
 				var place = function() {
-					var screen = Utils.toScreenCoordinates( posVector );
+					var screen = { x: $(window).width()/2, y: $(window).height()/2 };
+					
 					el.css({
 						left	: screen.x - ( el.outerWidth( true ) / 2 ),
-						top		: screen.y
+						top		: screen.y - 20
 					});
 				};
 				
